@@ -3,8 +3,9 @@ package org.apache.cxf
 import javax.inject.{Inject, Provider, Singleton}
 
 import com.typesafe.config.{Config, ConfigFactory}
-import eri.commons.config.{SSConfig, StringReader}
-import org.apache.cxf.binding.soap.{Soap11, Soap12, SoapBindingConfiguration, SoapVersion}
+import eri.commons.config.SSConfig
+import org.apache.cxf.binding.soap.{SoapBindingConfiguration, SoapVersion}
+import org.apache.cxf.config.ObjectReader._
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.cxf.transport.DestinationFactoryManager
 import org.apache.cxf.transport.http.HTTPTransportFactory
@@ -23,7 +24,7 @@ abstract class ClientModule extends CoreModule {
       .asEagerSingleton()
   }
 
-  protected def bindClient[T : ClassTag](key: String, wrappers: Seq[Class[_ <: Wrapper]] = Seq.empty): Unit = {
+  protected def bindClient[T : ClassTag](key: String, wrappers: Seq[Class[_ <: ClientWrapper]] = Seq.empty): Unit = {
     bindHTTPTransport()
 
     bind(classTag[T].runtimeClass.asInstanceOf[Class[T]])
@@ -49,7 +50,7 @@ object ClientModule {
     }
   }
 
-  class ClientProvider[T : ClassTag](key: String, wrappers: Seq[Class[_ <: Wrapper]] = Seq.empty) extends javax.inject.Provider[T] {
+  class ClientProvider[T : ClassTag](key: String, wrappers: Seq[Class[_ <: ClientWrapper]] = Seq.empty) extends javax.inject.Provider[T] {
     @Inject var bus: Bus = _
     @Inject var injector: com.google.inject.Injector = _
 
@@ -64,21 +65,13 @@ object ClientModule {
         val dynamicConfig = new SSConfig(config.toConfig)
         dynamicConfig.address.asOption[String].foreach(factory.setAddress)
 
-        dynamicConfig.bindingConfig.asOption[Config].map(new SSConfig(_)).foreach { config =>
+        dynamicConfig.bindingConfig.asOption[Config].map(new SSConfig(_)).map { config =>
           val bindingConfig = new SoapBindingConfiguration
-
-          implicit object SoapVersionReader extends StringReader[SoapVersion] {
-            def apply(valueStr: String): SoapVersion = valueStr match {
-              case "1.1" => Soap11.getInstance()
-              case "1.2" => Soap12.getInstance()
-              case _ => throw new Exception(s"SOAP version $valueStr is not supported")
-            }
-          }
 
           config.version.asOption[SoapVersion].foreach(bindingConfig.setVersion)
 
-          factory.setBindingConfig(bindingConfig)
-        }
+          bindingConfig
+        }.foreach(factory.setBindingConfig)
       }
 
       val service = factory.create()

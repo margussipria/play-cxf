@@ -27,10 +27,15 @@ object CoreModule {
       val bus = BusFactory.newInstance().createBus()
       BusFactory.setDefaultBus(Option.empty[Bus].orNull)
 
-      Option(injector.getExistingBinding(Key.get(classOf[ApplicationLifecycle]))).foreach { lifecycle =>
-        injector.getInstance(lifecycle.getKey).addStopHook { () =>
-          Future.successful(bus.shutdown(true))
+      try {
+        val clazz = Class.forName("play.api.inject.ApplicationLifecycle")
+
+        Option(injector.getExistingBinding(Key.get(clazz))).foreach { lifecycle =>
+          injector.getInstance(lifecycle.getKey).asInstanceOf[ApplicationLifecycle].addStopHook { () =>
+            Future.successful(bus.shutdown(true))
+          }
         }
+      } catch { case ignored: ClassNotFoundException =>
       }
 
       bus

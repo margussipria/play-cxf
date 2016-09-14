@@ -3,10 +3,13 @@ package org.apache.cxf.transport.play
 import javax.inject.{Inject, Provider, Singleton}
 
 import com.google.inject.name.Names
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
+import eri.commons.config.SSConfig
+import org.apache.cxf.binding.soap.{SoapBindingConfiguration, SoapVersion}
+import org.apache.cxf.config.ObjectReader._
 import org.apache.cxf.jaxws.EndpointImpl
 import org.apache.cxf.transport.DestinationFactoryManager
-import org.apache.cxf.{Bus, CoreModule, Wrapper}
+import org.apache.cxf.{Bus, CoreModule}
 import play.api.Configuration
 
 import scala.collection.JavaConverters._
@@ -22,7 +25,7 @@ abstract class EndpointModule extends CoreModule {
       .asEagerSingleton()
   }
 
-  protected def bindEndpoint(key: String, wrappers: Seq[Class[_ <: Wrapper]] = Seq.empty): Unit = {
+  protected def bindEndpoint(key: String, wrappers: Seq[Class[_ <: EndpointWrapper]] = Seq.empty): Unit = {
     bindPlayTransport()
 
     bind(classOf[EndpointImpl])
@@ -56,7 +59,7 @@ object EndpointModule {
   }
 
   @Singleton
-  private class EndpointImplProvider(key: String, wrappers: Seq[Class[_ <: Wrapper]] = Seq.empty) extends Provider[EndpointImpl] {
+  private class EndpointImplProvider(key: String, wrappers: Seq[Class[_ <: EndpointWrapper]] = Seq.empty) extends Provider[EndpointImpl] {
     @Inject var bus: Bus = _
     @Inject var injector: play.api.inject.Injector = _
     @Inject var configuration: Configuration = _
@@ -66,9 +69,20 @@ object EndpointModule {
         .flatMap(_.getObject(key))
         .getOrElse(ConfigFactory.empty.root)
 
-      val implementorClazz = Class.forName(config.toConfig.getString("implementor"))
+      val implementorClazz = Thread.currentThread().getContextClassLoader.loadClass(
+        config.toConfig.getString("implementor")
+      )
 
       val endpoint = new EndpointImpl(bus, injector.instanceOf(implementorClazz))
+
+      val dynamicConfig = new SSConfig(config.toConfig)
+      dynamicConfig.bindingConfig.asOption[Config].map(new SSConfig(_)).map { config =>
+        val bindingConfig = new SoapBindingConfiguration
+
+        config.version.asOption[SoapVersion].foreach(bindingConfig.setVersion)
+
+        bindingConfig
+      }.foreach(endpoint.setBindingConfig)
 
       wrappers.foreach { wrapperClass =>
         injector.instanceOf(wrapperClass).callback(endpoint)

@@ -1,5 +1,5 @@
 package org.apache.cxf
 
-trait Wrapper {
+trait ClientWrapper {
   def callback(value: AnyRef): Unit
 }

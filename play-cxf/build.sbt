@@ -15,7 +15,7 @@ organization := "eu.imind.play"
 organizationName := "iMind"
 organizationHomepage := Some(url("http://imind.eu/"))
 
-version := "1.3.0-SNAPSHOT"
+version := "1.5.0-SNAPSHOT"
 
 scalaVersion := "2.11.8"
 

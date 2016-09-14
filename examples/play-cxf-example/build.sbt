@@ -20,7 +20,7 @@ libraryDependencies += "org.apache.cxf" % "cxf-rt-frontend-jaxws" % CxfVersion
 
 libraryDependencies += "org.apache.cxf" % "cxf-rt-transports-http" % CxfVersion
 
-libraryDependencies += "eu.imind.play" %% "play-cxf_play25" % "1.3.0-SNAPSHOT"
+libraryDependencies += "eu.imind.play" %% "play-cxf_play25" % "1.5.0-SNAPSHOT"
 
 version in cxf := CxfVersion
 
