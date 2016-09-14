@@ -6,7 +6,7 @@ import com.google.inject.name.Names
 import com.typesafe.config.ConfigFactory
 import org.apache.cxf.jaxws.EndpointImpl
 import org.apache.cxf.transport.DestinationFactoryManager
-import org.apache.cxf.{Bus, CoreModule}
+import org.apache.cxf.{Bus, CoreModule, Wrapper}
 import play.api.Configuration
 
 import scala.collection.JavaConverters._

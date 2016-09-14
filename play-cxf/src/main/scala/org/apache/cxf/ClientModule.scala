@@ -8,7 +8,6 @@ import org.apache.cxf.binding.soap.{Soap11, Soap12, SoapBindingConfiguration, So
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.cxf.transport.DestinationFactoryManager
 import org.apache.cxf.transport.http.HTTPTransportFactory
-import org.apache.cxf.transport.play.Wrapper
 
 import scala.collection.JavaConverters._
 import scala.reflect.{ClassTag, _}
