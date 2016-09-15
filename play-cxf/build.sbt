@@ -8,12 +8,12 @@ val playVersionSuffix: String = {
 
 name := s"play-cxf_play$playVersionSuffix"
 
-homepage := Some(url("http://www.imind.eu/web/2013/11/07/developing-soap-services-using-play-framework-2-2-x/"))
+//homepage := Some(url("http://www.imind.eu/web/2013/11/07/developing-soap-services-using-play-framework-2-2-x/"))
 licenses := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 
-organization := "eu.imind.play"
-organizationName := "iMind"
-organizationHomepage := Some(url("http://imind.eu/"))
+organization := "com.solinor.play" // temporary new home
+//organizationName := "iMind"
+//organizationHomepage := Some(url("http://imind.eu/"))
 
 version := "1.5.0-SNAPSHOT"
 
