@@ -12,7 +12,7 @@ licenses := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/lice
 
 organization := "eu.sipria.play"
 
-version := "1.5.0-SNAPSHOT"
+version := "1.5.0"
 
 scalaVersion := "2.11.8"
 
