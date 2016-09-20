@@ -8,6 +8,7 @@ val playVersionSuffix: String = {
 
 name := s"play-guice-cxf_play$playVersionSuffix"
 
+homepage := Some(new URL("https://github.com/margussipria/play-guice-cxf"))
 licenses := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 
 organization := "eu.sipria.play"
