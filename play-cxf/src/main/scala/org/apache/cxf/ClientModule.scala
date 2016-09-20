@@ -3,9 +3,8 @@ package org.apache.cxf
 import javax.inject.{Inject, Provider, Singleton}
 
 import com.typesafe.config.{Config, ConfigFactory}
-import eri.commons.config.SSConfig
 import org.apache.cxf.binding.soap.{SoapBindingConfiguration, SoapVersion}
-import org.apache.cxf.config.ObjectReader._
+import org.apache.cxf.config.DynamicConfig
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.cxf.transport.DestinationFactoryManager
 import org.apache.cxf.transport.http.HTTPTransportFactory
@@ -62,10 +61,10 @@ object ClientModule {
       factory.setServiceClass(classTag[T].runtimeClass.asInstanceOf[Class[T]])
 
       Option(config.getObject(key)).foreach { config =>
-        val dynamicConfig = new SSConfig(config.toConfig)
+        val dynamicConfig = new DynamicConfig(config.toConfig)
         dynamicConfig.address.asOption[String].foreach(factory.setAddress)
 
-        dynamicConfig.bindingConfig.asOption[Config].map(new SSConfig(_)).map { config =>
+        dynamicConfig.bindingConfig.asOption[Config].map(new DynamicConfig(_)).map { config =>
           val bindingConfig = new SoapBindingConfiguration
 
           config.version.asOption[SoapVersion].foreach(bindingConfig.setVersion)

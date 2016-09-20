@@ -1,4 +1,4 @@
-Play! framework module for Apache CXF - Client sample
+Play Framework module for Apache CXF - Client sample
 =====================================================
 
 Using Apache CXF in a Play! Framework project as both SOAP server and client.

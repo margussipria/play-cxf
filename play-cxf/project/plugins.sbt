@@ -9,6 +9,6 @@ def propOr(name: String, value: String): String = {
 }
 
 // Use the Play sbt plugin for Play projects
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % propOr("play.version", "2.5.6"))
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % propOr("play.version", "2.5.8"))
 
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.1")

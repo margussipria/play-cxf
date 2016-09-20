@@ -4,9 +4,8 @@ import javax.inject.{Inject, Provider, Singleton}
 
 import com.google.inject.name.Names
 import com.typesafe.config.{Config, ConfigFactory}
-import eri.commons.config.SSConfig
 import org.apache.cxf.binding.soap.{SoapBindingConfiguration, SoapVersion}
-import org.apache.cxf.config.ObjectReader._
+import org.apache.cxf.config.DynamicConfig
 import org.apache.cxf.jaxws.EndpointImpl
 import org.apache.cxf.transport.DestinationFactoryManager
 import org.apache.cxf.{Bus, CoreModule}
@@ -75,8 +74,8 @@ object EndpointModule {
 
       val endpoint = new EndpointImpl(bus, injector.instanceOf(implementorClazz))
 
-      val dynamicConfig = new SSConfig(config.toConfig)
-      dynamicConfig.bindingConfig.asOption[Config].map(new SSConfig(_)).map { config =>
+      val dynamicConfig = new DynamicConfig(config.toConfig)
+      dynamicConfig.bindingConfig.asOption[Config].map(new DynamicConfig(_)).map { config =>
         val bindingConfig = new SoapBindingConfiguration
 
         config.version.asOption[SoapVersion].foreach(bindingConfig.setVersion)

@@ -6,20 +6,15 @@ val playVersionSuffix: String = {
   versions.take(2).mkString
 }
 
-name := s"play-cxf_play$playVersionSuffix"
+name := s"play-guice-cxf_play$playVersionSuffix"
 
-//homepage := Some(url("http://www.imind.eu/web/2013/11/07/developing-soap-services-using-play-framework-2-2-x/"))
 licenses := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 
-organization := "com.solinor.play" // temporary new home
-//organizationName := "iMind"
-//organizationHomepage := Some(url("http://imind.eu/"))
+organization := "eu.sipria.play"
 
 version := "1.5.0-SNAPSHOT"
 
 scalaVersion := "2.11.8"
-
-resolvers += "ERI OSS" at "http://dl.bintray.com/elderresearch/OSS"
 
 val CxfVersion = "3.1.7"
 
@@ -30,8 +25,6 @@ libraryDependencies += "org.apache.cxf" % "cxf-core" % CxfVersion
 libraryDependencies += "org.apache.cxf" % "cxf-rt-frontend-jaxws" % CxfVersion % Provided
 
 libraryDependencies += "org.apache.cxf" % "cxf-rt-transports-http" % CxfVersion % Provided
-
-libraryDependencies += "com.elderresearch" %% "ssc" % "0.2.0"
 
 scalacOptions := Seq(
   "-deprecation"
@@ -49,7 +42,7 @@ developers := List(
 )
 
 scmInfo := Some(ScmInfo(
-  url("https://github.com/imindeu/play-cxf"),
-  "scm:git:https://github.com/imindeu/play-cxf.git",
-  Some("scm:git:git@github.com:imindeu/play-cxf.git")
+  url("https://github.com/margussipria/play-guice-cxf"),
+  "scm:git:https://github.com/margussipria/play-guice-cxf.git",
+  Some("scm:git:git@github.com:margussipria/play-guice-cxf.git")
 ))
