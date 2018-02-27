@@ -13,19 +13,22 @@ licenses := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/lice
 
 organization := "eu.sipria.play"
 
-version := "1.5.0"
+version := "1.6.0"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.11.11"
 
-val CxfVersion = "3.1.7"
+crossScalaVersions := Seq("2.11.11", "2.12.3")
 
-libraryDependencies += "com.typesafe.play" %% "play" % PlayVersion.current % Provided
+val CxfVersion = "3.1.12"
 
-libraryDependencies += "org.apache.cxf" % "cxf-core" % CxfVersion
+libraryDependencies ++= Seq(
+  "com.typesafe.play" %% "play"         % PlayVersion.current % Provided,
+  "com.typesafe.play" %% "play-guice"   % PlayVersion.current % Provided,
 
-libraryDependencies += "org.apache.cxf" % "cxf-rt-frontend-jaxws" % CxfVersion % Provided
-
-libraryDependencies += "org.apache.cxf" % "cxf-rt-transports-http" % CxfVersion % Provided
+  "org.apache.cxf" % "cxf-core"                 % CxfVersion,
+  "org.apache.cxf" % "cxf-rt-frontend-jaxws"    % CxfVersion % Provided,
+  "org.apache.cxf" % "cxf-rt-transports-http"   % CxfVersion % Provided
+)
 
 scalacOptions := Seq(
   "-deprecation"

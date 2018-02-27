@@ -3,7 +3,7 @@ package org.apache.cxf.transport.play
 import javax.inject.{Inject, Provider, Singleton}
 
 import com.google.inject.name.Names
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{Config, ConfigFactory, ConfigObject}
 import org.apache.cxf.binding.soap.{SoapBindingConfiguration, SoapVersion}
 import org.apache.cxf.config.DynamicConfig
 import org.apache.cxf.jaxws.EndpointImpl
@@ -45,7 +45,7 @@ object EndpointModule {
     def get(): PlayTransportFactory = {
       val factory = new PlayTransportFactory
 
-      configuration.getStringSeq("apache.cxf.play.transports")
+      configuration.getOptional[Seq[String]]("apache.cxf.play.transports")
         .map(_.asJava)
         .foreach(factory.setTransportIds)
 
@@ -64,8 +64,8 @@ object EndpointModule {
     @Inject var configuration: Configuration = _
 
     def get(): EndpointImpl = {
-      val config = configuration.getConfig(EndpointKeyConfig)
-        .flatMap(_.getObject(key))
+      val config = configuration.getOptional[Configuration](EndpointKeyConfig)
+        .flatMap(_.getOptional[ConfigObject](key))
         .getOrElse(ConfigFactory.empty.root)
 
       val implementorClazz = Thread.currentThread().getContextClassLoader.loadClass(

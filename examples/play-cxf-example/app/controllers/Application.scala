@@ -6,7 +6,10 @@ import org.joda.time.DateTime
 import play.api.mvc._
 import services.sunset.rise.{LatLonDate, SunSetRiseServiceSoap}
 
-class Application @Inject() (service: SunSetRiseServiceSoap) extends Controller {
+class Application @Inject() (
+  service: SunSetRiseServiceSoap,
+  controllerComponents: ControllerComponents
+) extends AbstractController(controllerComponents) {
 
   def index = Action {
     Ok("Your new application is ready.")

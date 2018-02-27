@@ -1,10 +1,12 @@
+import java.io.File
+
 import play.core.PlayVersion
 
 name := "play-cxf-example"
 
 version := "1.0-SNAPSHOT"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.11.11"
 
 val playVersionSuffix: String = {
   val versions = PlayVersion.current.split('.')
@@ -12,15 +14,17 @@ val playVersionSuffix: String = {
   versions.take(2).mkString
 }
 
-val CxfVersion = "3.1.7"
+val CxfVersion = "3.1.12"
 
-libraryDependencies += "org.apache.cxf" % "cxf-rt-bindings-soap" % CxfVersion
+libraryDependencies ++= Seq(
+  guice,
 
-libraryDependencies += "org.apache.cxf" % "cxf-rt-frontend-jaxws" % CxfVersion
+  "org.apache.cxf" % "cxf-core"                 % CxfVersion,
+  "org.apache.cxf" % "cxf-rt-frontend-jaxws"    % CxfVersion,
+  "org.apache.cxf" % "cxf-rt-transports-http"   % CxfVersion
+)
 
-libraryDependencies += "org.apache.cxf" % "cxf-rt-transports-http" % CxfVersion
-
-libraryDependencies += "eu.imind.play" %% "play-cxf_play25" % "1.5.0-SNAPSHOT"
+libraryDependencies += "eu.sipria.play" %% "play-guice-cxf_play26" % "1.6.0"
 
 version in cxf := CxfVersion
 
@@ -40,7 +44,35 @@ scalacOptions := Seq(
 
 lazy val playCxf = RootProject(file("../../play-cxf/"))
 
+lazy val myInfo = taskKey[Seq[File]]("List")
+lazy val newList = taskKey[Seq[File]]("List")
+
 lazy val root = Project("play-cxf-example", file("."))
   .enablePlugins(PlayScala)
   .enablePlugins(CxfPlugin)
+  .enablePlugins(BuildInfoPlugin)
   .dependsOn(playCxf)
+  .settings(
+    buildInfoKeys := Seq[BuildInfoKey](name, version),
+    buildInfoPackage := "hello",
+
+    myInfo := {
+      val sources = (managedSources in Compile).value
+      val managed = (sourceManaged in Compile).value
+
+      val PathMatch = s"""^([^\\${File.separator}]+)(?:\\${File.separator}.*)""".r
+      object Path {
+        def unapply(arg: File): Option[String] = arg.toString match {
+          case PathMatch(value) => Some(value)
+          case _ => None
+        }
+      }
+
+      sources.map(_.relativeTo(managed)).collect { case Some(Path(value)) => value }.distinct.map(managed / _)
+    },
+    newList := {
+      val managed = (sourceManaged in Compile).value
+
+      sourceDirectories.in(Compile).value.filterNot(_.getPath == managed.getPath) ++ myInfo.value
+    }
+  )
