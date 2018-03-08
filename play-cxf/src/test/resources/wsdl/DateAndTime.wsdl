@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- http://cxf.apache.org/docs/developing-a-consumer.html -->
+<wsdl:definitions name="DateAndTime" targetNamespace="http://apache.org/date_and_time_soap_http"
+                  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xmlns:tns="http://apache.org/date_and_time_soap_http"
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+>
+  <wsdl:types>
+    <xsd:schema elementFormDefault="qualified" targetNamespace="http://apache.org/date_and_time_soap_http">
+
+      <xsd:simpleType name="ErrorCode">
+        <xsd:restriction base="xsd:token">
+          <xsd:pattern value="^[0-9]{2}$"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+
+      <xsd:simpleType name="ErrorMessage">
+        <xsd:restriction base="xsd:normalizedString">
+          <xsd:maxLength value="120" />
+        </xsd:restriction>
+      </xsd:simpleType>
+
+      <xsd:complexType name="ServiceFault">
+        <xsd:sequence>
+          <xsd:element name="ErrorCode" type="tns:ErrorCode" />
+          <xsd:element name="ErrorMessage" type="tns:ErrorMessage" />
+          <xsd:element minOccurs="0" name="TimeStamp" type="xsd:dateTime" />
+        </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:element name="askTimeRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="timeZone" type="xsd:normalizedString" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="askTimeResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="response" type="xsd:dateTime"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="FaultDetails" type="tns:ServiceFault" />
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="askTimeRequest">
+    <wsdl:part element="tns:askTimeRequest" name="in"/>
+  </wsdl:message>
+  <wsdl:message name="askTimeResponse">
+    <wsdl:part element="tns:askTimeResponse" name="out"/>
+  </wsdl:message>
+  <wsdl:message name="askTimeFault">
+    <wsdl:part element="tns:FaultDetails" name="faultDetail"/>
+  </wsdl:message>
+
+  <wsdl:portType name="DateAndTime">
+    <wsdl:operation name="askTime">
+      <wsdl:input message="tns:askTimeRequest" name="askTimeRequest"/>
+      <wsdl:output message="tns:askTimeResponse" name="askTimeResponse"/>
+      <wsdl:fault name="askTimeFault" message="tns:askTimeFault"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="DateAndTime_SOAPBinding" type="tns:DateAndTime">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+    <wsdl:operation name="askTime">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="askTimeRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="askTimeResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="askTimeFault">
+        <soap:fault name="pingMeFault" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="SOAPService">
+    <wsdl:port binding="tns:DateAndTime_SOAPBinding" name="SoapPort">
+      <soap:address location="http://localhost:9000/SoapContext/SoapPort"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
