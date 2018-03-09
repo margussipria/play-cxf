@@ -6,11 +6,10 @@ import java.time.{Clock, Instant, ZoneOffset}
 import com.google.inject.AbstractModule
 import org.apache.cxf.transport.play.EndpointModule
 import org.apache.date_and_time_soap_http.{AskTimeRequest, DateAndTime}
-import org.scalatest.{FreeSpec, Matchers, TestData, fixture}
-import org.scalatestplus.play.guice.GuiceOneServerPerTest
-import play.api.{Application, Configuration, Environment}
+import org.scalatest.{FreeSpec, Matchers}
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModuleConversions}
 import play.api.test.{Helpers, TestServer}
+import play.api.{Application, Configuration, Environment}
 
 import scala.language.implicitConversions
 
