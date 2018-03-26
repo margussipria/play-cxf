@@ -25,10 +25,14 @@ class CxfController @Inject() (
     val replyPromise: Promise[Message] = Promise.apply()
     dispatchMessage(extractMessage, delayedOutput, replyPromise)
 
+    val source = StreamConverters.asOutputStream().mapMaterializedValue(os => Future {
+      delayedOutput.setTarget(os)
+    })
+
     replyPromise.future.map { outMessage =>
-      val source = StreamConverters.asOutputStream().mapMaterializedValue(os => Future {
-        delayedOutput.setTarget(os)
-      })
+
+      delayedOutput.flush()
+      delayedOutput.close()
 
       Ok
         .chunked(source)

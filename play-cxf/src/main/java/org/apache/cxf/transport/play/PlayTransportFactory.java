@@ -41,14 +41,14 @@ public class PlayTransportFactory
   public static final String TRANSPORT_ID = "http://cxf.apache.org/transports/play";
   public static final List<String> DEFAULT_NAMESPACES = Collections.singletonList(TRANSPORT_ID);
 
-  private static final Set<String> URI_PREFIXES = new HashSet<String>();
+  private static final Set<String> URI_PREFIXES = new HashSet<>();
 
   static {
     URI_PREFIXES.add("play://");
   }
 
   private static final String NULL_ADDRESS = PlayTransportFactory.class.getName() + ".nulladdress";
-  private ConcurrentMap<String, PlayDestination> destinations = new ConcurrentHashMap<String, PlayDestination>();
+  private ConcurrentMap<String, PlayDestination> destinations = new ConcurrentHashMap<>();
 
   public PlayTransportFactory() {
     super(DEFAULT_NAMESPACES);

@@ -78,5 +78,27 @@ class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers
       app.injector.instanceOf[DateAndTime]
         .askTime(request).getResponse.toString should be ("2013-10-28T00:04:00.246")
     }
+
+    "should respond to multiple requests with correct time" in withApplication { builder =>
+      builder.overrides(
+        fromGuiceModule(new AbstractModule {
+          override def configure(): Unit = {
+            bind(classOf[Clock]).toInstance(
+              Clock.fixed(Instant.parse("2013-10-27T22:04:00.000Z"), ZoneOffset.UTC)
+            )
+          }
+        })
+      )
+    } { app =>
+
+      val request = new AskTimeRequest()
+      request.setTimeZone("Europe/Helsinki")
+
+      val service = app.injector.instanceOf[DateAndTime]
+
+      (1 to 3).par.map { _ => service.askTime(request) } foreach { response =>
+        response.getResponse.toString should be ("2013-10-28T00:04:00.000")
+      }
+    }
   }
 }
