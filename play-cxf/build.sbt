@@ -15,11 +15,11 @@ organization := "eu.sipria.play"
 
 version := "1.6.1-SNAPSHOT"
 
-scalaVersion := "2.11.12"
+scalaVersion := "2.12.5"
 
-crossScalaVersions := Seq(scalaVersion.value, "2.12.4")
+crossScalaVersions := Seq("2.11.12", "2.12.5")
 
-val CxfVersion = "3.1.14"
+val CxfVersion = "3.2.3"
 
 libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play"         % PlayVersion.current % Provided,
@@ -47,7 +47,7 @@ scalacOptions := Seq(
 
 enablePlugins(CxfPlugin)
 
-version in (CXF, test) := CxfVersion
+version in CXF := CxfVersion
 
 defaultArgs in test in wsdl2java := Seq(
   "-exsh", "true",

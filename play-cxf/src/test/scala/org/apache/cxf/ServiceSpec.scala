@@ -59,8 +59,8 @@ class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers
     }
   }
 
-  "When given working application" - {
-    "should request return correct time" in withApplication { builder =>
+  "A time server" - {
+    "should return correct time" in withApplication { builder =>
       builder.overrides(
         fromGuiceModule(new AbstractModule {
           override def configure(): Unit = {

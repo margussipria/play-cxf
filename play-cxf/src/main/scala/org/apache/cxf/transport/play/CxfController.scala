@@ -1,10 +1,10 @@
 package org.apache.cxf.transport.play
 
 import java.io.{InputStream, OutputStream}
-import javax.inject.Inject
 
-import akka.stream.Materializer
-import akka.stream.scaladsl.{Sink, Source, StreamConverters}
+import javax.inject.{Inject, Singleton}
+
+import akka.stream.scaladsl.StreamConverters
 import akka.util.ByteString
 import org.apache.cxf.message.{Message, MessageImpl}
 import play.api.mvc._
@@ -12,10 +12,11 @@ import play.api.mvc._
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
+@Singleton
 class CxfController @Inject() (
   transportFactory: PlayTransportFactory,
   controllerComponents: ControllerComponents
-)(implicit implicit val mat: Materializer, ec: ExecutionContext) extends AbstractController(controllerComponents) {
+)(implicit ec: ExecutionContext) extends AbstractController(controllerComponents) {
 
   val maxRequestSize: Int = 1024 * 1024
 
@@ -25,17 +26,17 @@ class CxfController @Inject() (
     dispatchMessage(extractMessage, delayedOutput, replyPromise)
 
     replyPromise.future.map { outMessage =>
-      val publisher = StreamConverters.asOutputStream().mapMaterializedValue(os => Future {
+      val source = StreamConverters.asOutputStream().mapMaterializedValue(os => Future {
         delayedOutput.setTarget(os)
-      }).runWith(Sink.asPublisher(false))
+      })
 
       Ok
-        .chunked(Source.fromPublisher(publisher))
+        .chunked(source)
         .as(outMessage.get(Message.CONTENT_TYPE).asInstanceOf[String])
     }
   }
 
-  private def extractMessage()(implicit request: Request[RawBuffer]) = {
+  private def extractMessage()(implicit request: Request[RawBuffer]): Message = {
     val msg: Message = new MessageImpl
     msg.put(Message.HTTP_REQUEST_METHOD, request.method)
     msg.put(Message.REQUEST_URL, request.path)
@@ -52,7 +53,7 @@ class CxfController @Inject() (
     msg
   }
 
-  private def endpointAddress()(implicit request: Request[RawBuffer]) = "play://" + request.host + request.path
+  private def endpointAddress()(implicit request: Request[RawBuffer]): String = "play://" + request.host + request.path
 
   private def headersAsJava()(implicit request: Request[RawBuffer]) = {
     request.headers.toMap.mapValues(_.asJava).asJava
