@@ -35,99 +35,99 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class PlayTransportFactory
-    extends AbstractTransportFactory
-    implements DestinationFactory, ConduitInitiator {
+  extends AbstractTransportFactory
+  implements DestinationFactory, ConduitInitiator {
 
-    public static final String TRANSPORT_ID = "http://cxf.apache.org/transports/play";
-    public static final List<String> DEFAULT_NAMESPACES = Collections.singletonList(TRANSPORT_ID);
+  public static final String TRANSPORT_ID = "http://cxf.apache.org/transports/play";
+  public static final List<String> DEFAULT_NAMESPACES = Collections.singletonList(TRANSPORT_ID);
 
-    private static final Set<String> URI_PREFIXES = new HashSet<String>();
+  private static final Set<String> URI_PREFIXES = new HashSet<String>();
 
-    static {
-        URI_PREFIXES.add("play://");
+  static {
+    URI_PREFIXES.add("play://");
+  }
+
+  private static final String NULL_ADDRESS = PlayTransportFactory.class.getName() + ".nulladdress";
+  private ConcurrentMap<String, PlayDestination> destinations = new ConcurrentHashMap<String, PlayDestination>();
+
+  public PlayTransportFactory() {
+    super(DEFAULT_NAMESPACES);
+  }
+
+  @Override
+  public Destination getDestination(EndpointInfo ei, Bus bus) throws IOException {
+    return getDestination(ei, createReference(ei), bus);
+  }
+
+  private EndpointReferenceType createReference(EndpointInfo ei) {
+    EndpointReferenceType epr = new EndpointReferenceType();
+    AttributedURIType address = new AttributedURIType();
+    address.setValue(ei.getAddress());
+    epr.setAddress(address);
+    return epr;
+  }
+
+  private PlayDestination getDestination(EndpointInfo ei, EndpointReferenceType reference, Bus bus) throws IOException {
+    final String factoryKey = computeFactoryKey(ei, reference);
+    PlayDestination d = destinations.get(factoryKey);
+    if (d == null) {
+      d = new PlayDestination(this, factoryKey, reference, ei, bus);
+      PlayDestination tmpD = destinations.putIfAbsent(factoryKey, d);
+      if (tmpD != null) {
+        d = tmpD;
+      }
     }
 
-    private static final String NULL_ADDRESS = PlayTransportFactory.class.getName() + ".nulladdress";
-    private ConcurrentMap<String, PlayDestination> destinations = new ConcurrentHashMap<String, PlayDestination>();
+    return d;
+  }
 
-    public PlayTransportFactory() {
-        super(DEFAULT_NAMESPACES);
+  public PlayDestination getDestination(String endpointAddress) {
+    return destinations.get(endpointAddress);
+  }
+
+  private static String computeFactoryKey(EndpointInfo ei, EndpointReferenceType reference) {
+    String addr = reference.getAddress().getValue();
+
+    if (addr == null) {
+      AddressType tp = ei.getExtensor(AddressType.class);
+      if (tp != null) {
+        addr = tp.getLocation();
+      }
     }
 
-    @Override
-    public Destination getDestination(EndpointInfo ei, Bus bus) throws IOException {
-        return getDestination(ei, createReference(ei), bus);
+    if (addr == null) {
+      addr = NULL_ADDRESS;
     }
 
-    private EndpointReferenceType createReference(EndpointInfo ei) {
-        EndpointReferenceType epr = new EndpointReferenceType();
-        AttributedURIType address = new AttributedURIType();
-        address.setValue(ei.getAddress());
-        epr.setAddress(address);
-        return epr;
+    return addr;
+  }
+
+  void remove(PlayDestination destination) {
+    destinations.remove(destination.getFactoryKey(), destination);
+  }
+
+  public String getDestinationsDebugInfo() {
+    StringBuilder debugInfo = new StringBuilder("Available destinations: [");
+    boolean first = true;
+    for (String destKey : destinations.keySet()) {
+      if (first) {
+        first = false;
+      } else {
+        debugInfo.append(", ");
+      }
+      debugInfo.append(destKey);
     }
+    debugInfo.append("]");
+    return debugInfo.toString();
+  }
 
-    private PlayDestination getDestination(EndpointInfo ei, EndpointReferenceType reference, Bus bus) throws IOException {
-        final String factoryKey = computeFactoryKey(ei, reference);
-        PlayDestination d = destinations.get(factoryKey);
-        if (d == null) {
-            d = new PlayDestination(this, factoryKey, reference, ei, bus);
-            PlayDestination tmpD = destinations.putIfAbsent(factoryKey, d);
-            if (tmpD != null) {
-                d = tmpD;
-            }
-        }
+  @Override
+  public Conduit getConduit(EndpointInfo targetInfo, Bus bus) throws IOException {
+    throw new UnsupportedOperationException("Play! Transport doesn't support client operation mode!");
+  }
 
-        return d;
-    }
-
-    public PlayDestination getDestination(String endpointAddress) {
-        return destinations.get(endpointAddress);
-    }
-
-    private static String computeFactoryKey(EndpointInfo ei, EndpointReferenceType reference) {
-        String addr = reference.getAddress().getValue();
-
-        if (addr == null) {
-            AddressType tp = ei.getExtensor(AddressType.class);
-            if (tp != null) {
-                addr = tp.getLocation();
-            }
-        }
-
-        if (addr == null) {
-            addr = NULL_ADDRESS;
-        }
-
-        return addr;
-    }
-
-    void remove(PlayDestination destination) {
-        destinations.remove(destination.getFactoryKey(), destination);
-    }
-
-    public String getDestinationsDebugInfo() {
-        StringBuilder debugInfo = new StringBuilder("Available destinations: [");
-        boolean first = true;
-        for (String destKey : destinations.keySet()) {
-            if (first) {
-                first = false;
-            } else {
-                debugInfo.append(", ");
-            }
-            debugInfo.append(destKey);
-        }
-        debugInfo.append("]");
-        return debugInfo.toString();
-    }
-
-    @Override
-    public Conduit getConduit(EndpointInfo targetInfo, Bus bus) throws IOException {
-        throw new UnsupportedOperationException("Play! Transport doesn't support client operation mode!");
-    }
-
-    @Override
-    public Conduit getConduit(EndpointInfo localInfo, EndpointReferenceType target, Bus bus) throws IOException {
-        throw new UnsupportedOperationException("Play! Transport doesn't support client operation mode!");
-    }
+  @Override
+  public Conduit getConduit(EndpointInfo localInfo, EndpointReferenceType target, Bus bus) throws IOException {
+    throw new UnsupportedOperationException("Play! Transport doesn't support client operation mode!");
+  }
 }

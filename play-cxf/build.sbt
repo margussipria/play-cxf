@@ -45,6 +45,7 @@ scalacOptions := Seq(
   "-deprecation"
 )
 
+enablePlugins(JacocoPlugin)
 enablePlugins(CxfPlugin)
 
 version in CXF := CxfVersion

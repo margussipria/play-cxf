@@ -33,55 +33,55 @@ import java.io.OutputStream;
 import java.util.logging.Logger;
 
 public class PlayDestination extends AbstractDestination {
-    private static final Logger LOG = LogUtils.getL7dLogger(PlayDestination.class);
+  private static final Logger LOG = LogUtils.getL7dLogger(PlayDestination.class);
 
-    private final String factoryKey;
-    private PlayTransportFactory destinationFactory;
+  private final String factoryKey;
+  private PlayTransportFactory destinationFactory;
 
-    public PlayDestination(
-        PlayTransportFactory destinationFactory,
-        String factoryKey,
-        EndpointReferenceType epr,
-        EndpointInfo ei,
-        Bus bus
-    ) {
-        super(bus, epr, ei);
-        this.factoryKey = factoryKey;
-        this.destinationFactory = destinationFactory;
-    }
+  public PlayDestination(
+    PlayTransportFactory destinationFactory,
+    String factoryKey,
+    EndpointReferenceType epr,
+    EndpointInfo ei,
+    Bus bus
+  ) {
+    super(bus, epr, ei);
+    this.factoryKey = factoryKey;
+    this.destinationFactory = destinationFactory;
+  }
 
-    public void dispatchMessage(
-        Message inMessage,
-        OutputStream output,
-        Promise<Message> replyPromise
-    ) {
-        PlayConduit inConduit = new PlayConduit(destinationFactory, this, output, replyPromise);
-        inMessage.put(PlayConduit.IN_CONDUIT, inConduit);
-        ExchangeImpl ex = new ExchangeImpl();
-        ex.setDestination(this);
-        ex.setConduit(inConduit);
-        ex.setInMessage(inMessage);
-        inMessage.setExchange(ex);
-        getMessageObserver().onMessage(inMessage);
-    }
+  public void dispatchMessage(
+    Message inMessage,
+    OutputStream output,
+    Promise<Message> replyPromise
+  ) {
+    PlayConduit inConduit = new PlayConduit(destinationFactory, this, output, replyPromise);
+    inMessage.put(PlayConduit.IN_CONDUIT, inConduit);
+    ExchangeImpl ex = new ExchangeImpl();
+    ex.setDestination(this);
+    ex.setConduit(inConduit);
+    ex.setInMessage(inMessage);
+    inMessage.setExchange(ex);
+    getMessageObserver().onMessage(inMessage);
+  }
 
-    @Override
-    protected Conduit getInbuiltBackChannel(Message inMessage) {
-        return (Conduit) inMessage.get(PlayConduit.IN_CONDUIT);
-    }
+  @Override
+  protected Conduit getInbuiltBackChannel(Message inMessage) {
+    return (Conduit) inMessage.get(PlayConduit.IN_CONDUIT);
+  }
 
-    @Override
-    public void shutdown() {
-        destinationFactory.remove(this);
-        super.shutdown();
-    }
+  @Override
+  public void shutdown() {
+    destinationFactory.remove(this);
+    super.shutdown();
+  }
 
-    @Override
-    protected Logger getLogger() {
-        return LOG;
-    }
+  @Override
+  protected Logger getLogger() {
+    return LOG;
+  }
 
-    public String getFactoryKey() {
-        return factoryKey;
-    }
+  public String getFactoryKey() {
+    return factoryKey;
+  }
 }

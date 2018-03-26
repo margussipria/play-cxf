@@ -30,32 +30,36 @@ import java.io.OutputStream;
 import java.util.logging.Logger;
 
 public class PlayConduit extends AbstractConduit {
-    static final String IN_CONDUIT = PlayConduit.class.getName() + ".inConduit";
-    private static final Logger LOG = LogUtils.getL7dLogger(PlayConduit.class);
+  static final String IN_CONDUIT = PlayConduit.class.getName() + ".inConduit";
+  private static final Logger LOG = LogUtils.getL7dLogger(PlayConduit.class);
 
-    private final OutputStream output;
-    private final Promise<Message> replyPromise;
+  private final OutputStream output;
+  private final Promise<Message> replyPromise;
 
-    public PlayConduit(
-        PlayTransportFactory transportFactory,
-        PlayDestination destination,
-        OutputStream output,
-        Promise<Message> replyPromise
-    ) {
-        super(destination.getAddress());
-        this.output = output;
-        this.replyPromise = replyPromise;
-    }
+  public PlayConduit(
+    PlayTransportFactory transportFactory,
+    PlayDestination destination,
+    OutputStream output,
+    Promise<Message> replyPromise
+  ) {
+    super(destination.getAddress());
+    this.output = output;
+    this.replyPromise = replyPromise;
+  }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void prepare(Message outMessage) throws IOException {
-        outMessage.setContent(OutputStream.class, output);
-        replyPromise.complete(new Success(outMessage));
-    }
+  @Override
+  public void prepare(Message message) {
+    message.setContent(OutputStream.class, output);
+  }
 
-    @Override
-    protected Logger getLogger() {
-        return LOG;
-    }
+  @Override
+  public void close(Message message) throws IOException {
+    super.close(message);
+    replyPromise.complete(new Success<>(message));
+  }
+
+  @Override
+  protected Logger getLogger() {
+    return LOG;
+  }
 }

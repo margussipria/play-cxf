@@ -55,7 +55,7 @@ class CxfController @Inject() (
 
   private def endpointAddress()(implicit request: Request[RawBuffer]): String = "play://" + request.host + request.path
 
-  private def headersAsJava()(implicit request: Request[RawBuffer]) = {
+  private def headersAsJava()(implicit request: Request[RawBuffer]): java.util.Map[String, java.util.List[String]] = {
     request.headers.toMap.mapValues(_.asJava).asJava
   }
 
@@ -63,7 +63,7 @@ class CxfController @Inject() (
     inMessage: Message,
     output: OutputStream,
     replyPromise: Promise[Message]
-  )(implicit request: Request[RawBuffer]) {
+  )(implicit request: Request[RawBuffer]): Unit = {
 
     val dOpt = Option(transportFactory.getDestination(endpointAddress)).orElse(
       Option(transportFactory.getDestination(request.path))
