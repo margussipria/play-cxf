@@ -13,7 +13,7 @@ licenses := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/lice
 
 organization := "eu.sipria.play"
 
-version := "1.6.1-SNAPSHOT"
+version := "1.6.1"
 
 scalaVersion := "2.12.5"
 
@@ -55,13 +55,13 @@ defaultArgs in test in wsdl2java := Seq(
   "-validate",
   "-wv", "1.1"
 )
-
+/*
 wsdls in test in wsdl2java := Seq(
   Wsdl("DateAndTime", (resourceDirectory in Test).value / "wsdl/DateAndTime.wsdl", Seq(
     "-wsdlLocation", "classpath:wsdl/DateAndTime.wsdl"
   ))
 )
-
+*/
 publishMavenStyle := true
 
 publishArtifact in Test := false
