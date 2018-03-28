@@ -50,18 +50,20 @@ enablePlugins(CxfPlugin)
 
 version in CXF := CxfVersion
 
-defaultArgs in test in wsdl2java := Seq(
+Test / cxfDefaultArgs := Seq(
   "-exsh", "true",
   "-validate",
   "-wv", "1.1"
 )
-/*
-wsdls in test in wsdl2java := Seq(
+
+Test / cxfWSDLs := Seq(
   Wsdl("DateAndTime", (resourceDirectory in Test).value / "wsdl/DateAndTime.wsdl", Seq(
     "-wsdlLocation", "classpath:wsdl/DateAndTime.wsdl"
   ))
 )
-*/
+
+fork in Test := true
+
 publishMavenStyle := true
 
 publishArtifact in Test := false
