@@ -1,6 +1,6 @@
 package org.apache.cxf.transport.play
 
-import java.io.{InputStream, OutputStream}
+import java.io.InputStream
 
 import javax.inject.{Inject, Singleton}
 
@@ -10,7 +10,7 @@ import org.apache.cxf.message.{Message, MessageImpl}
 import play.api.mvc._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CxfController @Inject() (
@@ -21,22 +21,19 @@ class CxfController @Inject() (
   val maxRequestSize: Int = 1024 * 1024
 
   def handle(path: String = ""): Action[RawBuffer] = Action.async(parse.raw(maxRequestSize)) { implicit request =>
-    val delayedOutput = new DelayedOutputStream
-    val replyPromise: Promise[Message] = Promise.apply()
-    dispatchMessage(extractMessage, delayedOutput, replyPromise)
+    Future {
+      val destination: PlayDestination = getDestination
 
-    val source = StreamConverters.asOutputStream().mapMaterializedValue(os => Future {
-      delayedOutput.setTarget(os)
-    })
+      val message = extractMessage
 
-    replyPromise.future.map { outMessage =>
-
-      delayedOutput.flush()
-      delayedOutput.close()
+      val source = StreamConverters.asOutputStream().mapMaterializedValue(output => Future {
+        message.put(Message.ENDPOINT_ADDRESS, destination.getFactoryKey)
+        destination.dispatchMessage(message, output)
+      })
 
       Ok
         .chunked(source)
-        .as(outMessage.get(Message.CONTENT_TYPE).asInstanceOf[String])
+        .as(message.get(Message.CONTENT_TYPE).asInstanceOf[String])
     }
   }
 
@@ -57,29 +54,17 @@ class CxfController @Inject() (
     msg
   }
 
-  private def endpointAddress()(implicit request: Request[RawBuffer]): String = "play://" + request.host + request.path
+  private def endpointAddress(implicit request: Request[RawBuffer]): String = "play://" + request.host + request.path
 
-  private def headersAsJava()(implicit request: Request[RawBuffer]): java.util.Map[String, java.util.List[String]] = {
+  private def headersAsJava(implicit request: Request[RawBuffer]): java.util.Map[String, java.util.List[String]] = {
     request.headers.toMap.mapValues(_.asJava).asJava
   }
 
-  private def dispatchMessage(
-    inMessage: Message,
-    output: OutputStream,
-    replyPromise: Promise[Message]
-  )(implicit request: Request[RawBuffer]): Unit = {
-
-    val dOpt = Option(transportFactory.getDestination(endpointAddress)).orElse(
+  def getDestination(implicit request: Request[RawBuffer]): PlayDestination = {
+    Option(transportFactory.getDestination(endpointAddress)).orElse(
       Option(transportFactory.getDestination(request.path))
-    )
-    dOpt match {
-      case Some(destination) =>
-        inMessage.put(Message.ENDPOINT_ADDRESS, destination.getFactoryKey)
-        destination.dispatchMessage(inMessage, output, replyPromise)
-      case _ =>
-        replyPromise.failure(
-          new IllegalArgumentException(s"Destination not found: [$endpointAddress] ${transportFactory.getDestinationsDebugInfo}")
-        )
+    ) getOrElse {
+      throw new IllegalArgumentException(s"Destination not found: [$endpointAddress] ${transportFactory.getDestinationsDebugInfo}")
     }
   }
 }

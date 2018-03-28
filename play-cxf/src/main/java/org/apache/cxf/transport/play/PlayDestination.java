@@ -27,7 +27,6 @@ import org.apache.cxf.service.model.EndpointInfo;
 import org.apache.cxf.transport.AbstractDestination;
 import org.apache.cxf.transport.Conduit;
 import org.apache.cxf.ws.addressing.EndpointReferenceType;
-import scala.concurrent.Promise;
 
 import java.io.OutputStream;
 import java.util.logging.Logger;
@@ -50,12 +49,8 @@ public class PlayDestination extends AbstractDestination {
     this.destinationFactory = destinationFactory;
   }
 
-  public void dispatchMessage(
-    Message inMessage,
-    OutputStream output,
-    Promise<Message> replyPromise
-  ) {
-    PlayConduit inConduit = new PlayConduit(destinationFactory, this, output, replyPromise);
+  public void dispatchMessage(Message inMessage, OutputStream output) {
+    PlayConduit inConduit = new PlayConduit(destinationFactory, this, output);
     inMessage.put(PlayConduit.IN_CONDUIT, inConduit);
     ExchangeImpl ex = new ExchangeImpl();
     ex.setDestination(this);

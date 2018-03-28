@@ -13,13 +13,13 @@ licenses := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/lice
 
 organization := "eu.sipria.play"
 
-version := "1.6.2"
+version := "1.6.3-SNAPSHOT"
 
 scalaVersion := "2.12.5"
 
 crossScalaVersions := Seq("2.11.12", "2.12.5")
 
-val CxfVersion = "3.2.3"
+val CxfVersion = "3.2.4"
 
 libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play"         % PlayVersion.current % Provided,

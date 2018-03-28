@@ -22,8 +22,6 @@ package org.apache.cxf.transport.play;
 import org.apache.cxf.common.logging.LogUtils;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.transport.AbstractConduit;
-import scala.concurrent.Promise;
-import scala.util.Success;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,17 +32,14 @@ public class PlayConduit extends AbstractConduit {
   private static final Logger LOG = LogUtils.getL7dLogger(PlayConduit.class);
 
   private final OutputStream output;
-  private final Promise<Message> replyPromise;
 
   public PlayConduit(
     PlayTransportFactory transportFactory,
     PlayDestination destination,
-    OutputStream output,
-    Promise<Message> replyPromise
+    OutputStream output
   ) {
     super(destination.getAddress());
     this.output = output;
-    this.replyPromise = replyPromise;
   }
 
   @Override
@@ -53,9 +48,12 @@ public class PlayConduit extends AbstractConduit {
   }
 
   @Override
-  public void close(Message message) throws IOException {
-    super.close(message);
-    replyPromise.complete(new Success<>(message));
+  public void close(Message msg) throws IOException {
+    OutputStream os = msg.getContent(OutputStream.class);
+    if (os != null) {
+      os.flush();
+      os.close();
+    }
   }
 
   @Override

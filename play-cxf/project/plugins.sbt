@@ -18,6 +18,6 @@ addSbtPlugin("io.paymenthighway.sbt" % "sbt-cxf" % "1.5")
 
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.1")
 
-addSbtPlugin("com.github.sbt" % "sbt-jacoco" % "3.0.3")
+addSbtPlugin("com.github.sbt" % "sbt-jacoco" % "3.1.0-M3")
 
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.1")

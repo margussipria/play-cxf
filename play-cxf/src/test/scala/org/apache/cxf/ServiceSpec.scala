@@ -21,13 +21,13 @@ class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers
 
     class DateAndTimeServiceModule extends EndpointModule {
       def configure(): Unit = {
-        bindEndpoint("DateAndTimeService")
+        bindEndpoint("DateAndTimeService", Seq())
       }
     }
 
     class DateAndTimeClientModule extends ClientModule {
       def configure(): Unit = {
-        bindClient[DateAndTime]("org.apache.date_and_time_soap_http.DateAndTime")
+        bindClient[DateAndTime]("org.apache.date_and_time_soap_http.DateAndTime", Seq())
       }
     }
 
@@ -96,7 +96,7 @@ class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers
 
       val service = app.injector.instanceOf[DateAndTime]
 
-      (1 to 3).par.map { _ => service.askTime(request) } foreach { response =>
+      (1 to 25).par.map { _ => service.askTime(request) } foreach { response =>
         response.getResponse.toString should be ("2013-10-28T00:04:00.000")
       }
     }
