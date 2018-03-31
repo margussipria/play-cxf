@@ -35,7 +35,7 @@ object CoreModule {
             Future.successful(bus.shutdown(true))
           }
         }
-      } catch { case ignored: ClassNotFoundException =>
+      } catch { case _: ClassNotFoundException =>
       }
 
       bus
