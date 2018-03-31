@@ -1,6 +1,6 @@
 package org.apache.cxf.transport.play
 
-import java.io.InputStream
+import java.io.{InputStream, OutputStream}
 
 import javax.inject.{Inject, Singleton}
 
@@ -10,7 +10,8 @@ import org.apache.cxf.message.{Message, MessageImpl}
 import play.api.mvc._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.util.Failure
 
 @Singleton
 class CxfController @Inject() (
@@ -21,19 +22,31 @@ class CxfController @Inject() (
   val maxRequestSize: Int = 1024 * 1024
 
   def handle(path: String = ""): Action[RawBuffer] = Action.async(parse.raw(maxRequestSize)) { implicit request =>
+    val messagePromise = Promise[Message]()
+
     Future {
-      val destination: PlayDestination = getDestination
-
       val message = extractMessage
+      message.put(PlayDestination.PLAY_MESSAGE_PROMISE, messagePromise)
 
-      val source = StreamConverters.asOutputStream().mapMaterializedValue(output => Future {
-        message.put(Message.ENDPOINT_ADDRESS, destination.getFactoryKey)
-        destination.dispatchMessage(message, output)
+      getDestination.dispatchMessage(message)
+    } andThen {
+      case Failure(exception) =>
+        messagePromise.tryFailure(exception)
+    }
+
+    messagePromise.future.map { message =>
+
+      val source = StreamConverters.asOutputStream().mapMaterializedValue(outputStream => Future {
+        val delayedOutputStream = message.getContent(classOf[OutputStream]).asInstanceOf[DelayedOutputStream]
+
+        delayedOutputStream.flush()
+        delayedOutputStream.setTarget(outputStream)
       })
 
-      Ok
-        .chunked(source)
-        .as(message.get(Message.CONTENT_TYPE).asInstanceOf[String])
+      val responseCode = Option(message.get(Message.RESPONSE_CODE)) map (_.toString) map (_.toInt) getOrElse OK
+      val contentType = message.get(Message.CONTENT_TYPE).asInstanceOf[String]
+
+      Status(responseCode).chunked(source).as(contentType)
     }
   }
 

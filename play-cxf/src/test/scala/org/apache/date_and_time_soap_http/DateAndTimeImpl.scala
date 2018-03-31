@@ -17,10 +17,23 @@ class DateAndTimeImpl @Inject() (
   override def askTime(in: AskTimeRequest): AskTimeResponse = {
 
     val zoneId = ZoneId.of(in.getTimeZone)
-    val utcClock = clock.withZone(ZoneOffset.UTC)
 
-    `with`(new AskTimeResponse) { response =>
-      response.setResponse(ZonedDateTime.now(utcClock).withZoneSameInstant(zoneId))
+    try {
+      val utcClock = clock.withZone(ZoneOffset.UTC)
+
+      `with`(new AskTimeResponse) { response =>
+        response.setResponse(ZonedDateTime.now(utcClock).withZoneSameInstant(zoneId))
+      }
+    } catch {
+      case exception: Exception =>
+        val utcClock = Clock.systemUTC()
+
+        val fault = new ServiceFault()
+        fault.setErrorCode("667")
+        fault.setErrorMessage("Test Error Message")
+        fault.setTimeStamp(ZonedDateTime.now(utcClock).withZoneSameInstant(zoneId))
+
+        throw new AskTimeFault(exception.getMessage, fault, exception)
     }
   }
 

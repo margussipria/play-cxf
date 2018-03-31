@@ -27,17 +27,19 @@ import org.apache.cxf.service.model.EndpointInfo;
 import org.apache.cxf.transport.AbstractDestination;
 import org.apache.cxf.transport.Conduit;
 import org.apache.cxf.ws.addressing.EndpointReferenceType;
+import scala.concurrent.Promise;
 
-import java.io.OutputStream;
 import java.util.logging.Logger;
 
 public class PlayDestination extends AbstractDestination {
   private static final Logger LOG = LogUtils.getL7dLogger(PlayDestination.class);
 
+  public static final String PLAY_MESSAGE_PROMISE = "PLAY.MESSAGE.PROMISE";
+
   private final String factoryKey;
   private PlayTransportFactory destinationFactory;
 
-  public PlayDestination(
+  PlayDestination(
     PlayTransportFactory destinationFactory,
     String factoryKey,
     EndpointReferenceType epr,
@@ -49,12 +51,9 @@ public class PlayDestination extends AbstractDestination {
     this.destinationFactory = destinationFactory;
   }
 
-  public void dispatchMessage(Message inMessage, OutputStream output) {
-    PlayConduit inConduit = new PlayConduit(destinationFactory, this, output);
-    inMessage.put(PlayConduit.IN_CONDUIT, inConduit);
+  public void dispatchMessage(Message inMessage) {
     ExchangeImpl ex = new ExchangeImpl();
     ex.setDestination(this);
-    ex.setConduit(inConduit);
     ex.setInMessage(inMessage);
     inMessage.setExchange(ex);
     getMessageObserver().onMessage(inMessage);
@@ -62,7 +61,11 @@ public class PlayDestination extends AbstractDestination {
 
   @Override
   protected Conduit getInbuiltBackChannel(Message inMessage) {
-    return (Conduit) inMessage.get(PlayConduit.IN_CONDUIT);
+    @SuppressWarnings("unchecked")
+    Promise<Message> messsagePromise = (Promise<Message>) inMessage.get(PLAY_MESSAGE_PROMISE);
+    inMessage.remove(PLAY_MESSAGE_PROMISE);
+
+    return new PlayBackChannelConduit(this, messsagePromise);
   }
 
   @Override
@@ -76,6 +79,7 @@ public class PlayDestination extends AbstractDestination {
     return LOG;
   }
 
+  @SuppressWarnings("WeakerAccess")
   public String getFactoryKey() {
     return factoryKey;
   }

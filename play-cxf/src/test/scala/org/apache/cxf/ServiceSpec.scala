@@ -1,11 +1,17 @@
 package org.apache.cxf
 
 import java.io.File
-import java.time.{Clock, Instant, ZoneOffset}
+import java.time.{Clock, Instant, ZoneId, ZoneOffset}
+import java.util.concurrent.ConcurrentLinkedQueue
+
+import javax.inject.Provider
 
 import com.google.inject.AbstractModule
+import org.apache.cxf.message.Message
+import org.apache.cxf.phase.{AbstractPhaseInterceptor, Phase}
 import org.apache.cxf.transport.play.EndpointModule
 import org.apache.date_and_time_soap_http.{AskTimeRequest, DateAndTime}
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FreeSpec, Matchers}
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModuleConversions}
 import play.api.test.{Helpers, TestServer}
@@ -13,7 +19,7 @@ import play.api.{Application, Configuration, Environment}
 
 import scala.language.implicitConversions
 
-class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers {
+class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers with ScalaFutures {
 
   type Builder = GuiceApplicationBuilder
 
@@ -95,10 +101,62 @@ class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers
       request.setTimeZone("Europe/Helsinki")
 
       val service = app.injector.instanceOf[DateAndTime]
+      val queue = interceptResponseCode(service)
 
       (1 to 25).par.map { _ => service.askTime(request) } foreach { response =>
         response.getResponse.toString should be ("2013-10-28T00:04:00.000")
       }
+
+      queue should have size 25
+      queue should contain only "200"
     }
+
+    "should return fault with correct http status" in withApplication { builder =>
+      builder.overrides(
+        fromGuiceModule(new AbstractModule {
+          override def configure(): Unit = {
+            bind(classOf[Clock]).toProvider(new Provider[Clock] {
+              def get: Clock = new Clock {
+                override def getZone: ZoneId = throw new Exception("Not Implemented")
+                override def withZone(zone: ZoneId): Clock = throw new Exception("No Clock")
+                override def instant(): Instant = throw new Exception("Not Implemented")
+              }
+            })
+          }
+        })
+      )
+    } { app =>
+      val service = app.injector.instanceOf[DateAndTime]
+
+      val request = new AskTimeRequest()
+      request.setTimeZone("Europe/Helsinki")
+
+      val queue = interceptResponseCode(service)
+
+      val fault = intercept[org.apache.date_and_time_soap_http.AskTimeFault] {
+        service.askTime(request)
+      }
+
+      fault.getFaultInfo.getErrorCode should be ("667")
+      fault.getFaultInfo.getErrorMessage should be ("Test Error Message")
+
+      queue should have size 1
+      queue should contain ("500")
+    }
+  }
+
+  def interceptResponseCode(service: AnyRef): ConcurrentLinkedQueue[String] = {
+    val queue = new ConcurrentLinkedQueue[String]
+
+    val client = org.apache.cxf.frontend.ClientProxy.getClient(service)
+    client.getInInterceptors.add(new ResponseCodeInterceptor(queue))
+
+    queue
+  }
+}
+
+class ResponseCodeInterceptor(queue: ConcurrentLinkedQueue[String]) extends AbstractPhaseInterceptor[Message](Phase.RECEIVE) {
+  def handleMessage(message: Message): Unit = {
+    queue.add(message.get(Message.RESPONSE_CODE).toString)
   }
 }

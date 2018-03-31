@@ -33,6 +33,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class PlayTransportFactory
   extends AbstractTransportFactory
@@ -48,7 +51,10 @@ public class PlayTransportFactory
   }
 
   private static final String NULL_ADDRESS = PlayTransportFactory.class.getName() + ".nulladdress";
-  private ConcurrentMap<String, PlayDestination> destinations = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, PlayDestination> destinations = new ConcurrentHashMap<>();
+
+  private final ReadWriteLock lock = new ReentrantReadWriteLock();
+  private final Lock r = lock.readLock();
 
   public PlayTransportFactory() {
     super(DEFAULT_NAMESPACES);
@@ -68,17 +74,24 @@ public class PlayTransportFactory
   }
 
   private PlayDestination getDestination(EndpointInfo ei, EndpointReferenceType reference, Bus bus) throws IOException {
-    final String factoryKey = computeFactoryKey(ei, reference);
-    PlayDestination d = destinations.get(factoryKey);
-    if (d == null) {
-      d = new PlayDestination(this, factoryKey, reference, ei, bus);
-      PlayDestination tmpD = destinations.putIfAbsent(factoryKey, d);
-      if (tmpD != null) {
-        d = tmpD;
-      }
-    }
+    r.lock();
+    try {
+      synchronized (destinations) {
+        final String factoryKey = computeFactoryKey(ei, reference);
+        PlayDestination d = destinations.get(factoryKey);
+        if (d == null) {
+          d = new PlayDestination(this, factoryKey, reference, ei, bus);
+          PlayDestination tmpD = destinations.putIfAbsent(factoryKey, d);
+          if (tmpD != null) {
+            d = tmpD;
+          }
+        }
 
-    return d;
+        return d;
+      }
+    } finally {
+      r.unlock();
+    }
   }
 
   public PlayDestination getDestination(String endpointAddress) {
