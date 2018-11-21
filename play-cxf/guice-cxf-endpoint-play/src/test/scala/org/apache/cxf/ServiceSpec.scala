@@ -25,19 +25,20 @@ class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers
 
   private def withApplication(f: Builder => Builder = builder => builder)(testCode: Application => Any): Any = {
 
-    class DateAndTimeServiceModule extends EndpointModule {
+    class DateAndTimeServiceModule extends EndpointModule(false) {
+
       override def configure(): Unit = {
-        bindEndpoint("DateAndTimeService", Seq())
+        bindEndpoint("DateAndTimeService", Seq.empty)
       }
     }
 
-    class DateAndTimeClientModule extends ClientModule {
+    class DateAndTimeClientModule extends ClientModule(false) {
       override def configure(): Unit = {
-        bindClient[DateAndTime]("org.apache.date_and_time_soap_http.DateAndTime", Seq())
+        bindClient[DateAndTime]("org.apache.date_and_time_soap_http.DateAndTime", Seq.empty)
       }
     }
 
-    val builder = new GuiceApplicationBuilder()
+    val builder = GuiceApplicationBuilder(eagerly = true)
       .bindings(
         fromGuiceModule(new AbstractModule {
           override def configure(): Unit = {

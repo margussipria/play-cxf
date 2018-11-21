@@ -13,24 +13,26 @@ import play.api.Configuration
 
 import scala.collection.JavaConverters._
 
-abstract class EndpointModule extends CoreModule {
+abstract class EndpointModule(eagerly: Boolean = true) extends CoreModule(eagerly) {
   import EndpointModule._
 
   protected def bindPlayTransport(): Unit = {
     bindBus()
 
-    bind(classOf[PlayTransportFactory])
-      .toProvider(classOf[PlayTransportFactoryProvider])
-      .asEagerSingleton()
+    maybeEagerly {
+      bind(classOf[PlayTransportFactory])
+        .toProvider(classOf[PlayTransportFactoryProvider])
+    }
   }
 
   protected def bindEndpoint(key: String, wrappers: Seq[Class[_ <: EndpointWrapper]] = Seq.empty): Unit = {
     bindPlayTransport()
 
-    bind(classOf[EndpointImpl])
-      .annotatedWith(Names.named(key))
-      .toProvider(new EndpointImplProvider(key, wrappers))
-      .asEagerSingleton()
+    maybeEagerly {
+      bind(classOf[EndpointImpl])
+        .annotatedWith(Names.named(key))
+        .toProvider(new EndpointImplProvider(key, wrappers))
+    }
   }
 }
 
@@ -58,7 +60,7 @@ object EndpointModule {
   }
 
   @Singleton
-  private class EndpointImplProvider(key: String, wrappers: Seq[Class[_ <: EndpointWrapper]] = Seq.empty) extends Provider[EndpointImpl] {
+  class EndpointImplProvider(key: String, wrappers: Seq[Class[_ <: EndpointWrapper]] = Seq.empty) extends Provider[EndpointImpl] {
     @Inject var bus: Bus = _
     @Inject var injector: play.api.inject.Injector = _
     @Inject var configuration: Configuration = _

@@ -12,23 +12,25 @@ import org.apache.cxf.transport.http.HTTPTransportFactory
 import scala.collection.JavaConverters._
 import scala.reflect.{ClassTag, _}
 
-abstract class ClientModule extends CoreModule {
+abstract class ClientModule(eagerly: Boolean = true) extends CoreModule(eagerly) {
   import ClientModule._
 
   protected def bindHTTPTransport(): Unit = {
     bindBus()
 
-    bind(classOf[HTTPTransportFactory])
-      .toProvider(classOf[HTTPTransportFactoryProvider])
-      .asEagerSingleton()
+    maybeEagerly {
+      bind(classOf[HTTPTransportFactory])
+        .toProvider(classOf[HTTPTransportFactoryProvider])
+    }
   }
 
   protected def bindClient[T : ClassTag](key: String, wrappers: Seq[Class[_ <: ClientWrapper]] = Seq.empty): Unit = {
     bindHTTPTransport()
 
-    bind(classTag[T].runtimeClass.asInstanceOf[Class[T]])
-      .toProvider(new ClientProvider[T](key, wrappers))
-      .asEagerSingleton()
+    maybeEagerly {
+      bind(classTag[T].runtimeClass.asInstanceOf[Class[T]])
+        .toProvider(new ClientProvider[T](key, wrappers))
+    }
   }
 }
 

@@ -2,18 +2,28 @@ package org.apache.cxf
 
 import javax.inject.{Inject, Provider, Singleton}
 
-import com.google.inject.{AbstractModule, Key}
+import com.google.inject.binder.ScopedBindingBuilder
+import com.google.inject.{AbstractModule, Key, Scopes}
 import play.api.inject.ApplicationLifecycle
 
 import scala.concurrent.Future
 
-abstract class CoreModule extends AbstractModule {
+abstract class CoreModule(val eagerly: Boolean = true) extends AbstractModule {
   import CoreModule._
 
+  protected def maybeEagerly(scopedBindingBuilder: ScopedBindingBuilder): Unit ={
+    if (eagerly) {
+      scopedBindingBuilder.asEagerSingleton()
+    } else {
+      scopedBindingBuilder.in(Scopes.SINGLETON)
+    }
+  }
+
   def bindBus(addPlayStopHook: Boolean = false): Unit = {
-    bind(classOf[Bus])
-      .toProvider(classOf[CxfBusProvider])
-      .asEagerSingleton()
+    maybeEagerly {
+      bind(classOf[Bus])
+        .toProvider(classOf[CxfBusProvider])
+    }
   }
 }
 
