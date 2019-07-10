@@ -8,7 +8,7 @@ import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
-class CxfController @Inject()(
+class CxfControllerStrict @Inject()(
     val transportFactory: PlayTransportFactory,
     controllerComponents: ControllerComponents
   )(
