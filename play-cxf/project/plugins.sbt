@@ -12,7 +12,7 @@ def propOr(name: String, value: String): String = {
 }
 
 // Use the Play sbt plugin for Play projects
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % propOr("play.version", "2.6.20"))
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % propOr("play.version", "2.6.23"))
 
 addSbtPlugin("io.paymenthighway.sbt" % "sbt-cxf" % "1.5")
 

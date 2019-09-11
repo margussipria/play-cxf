@@ -4,8 +4,10 @@ import javax.inject.{Inject, Provider, Singleton}
 
 import com.google.inject.binder.ScopedBindingBuilder
 import com.google.inject.{AbstractModule, Key, Scopes}
+import org.apache.cxf.transport.{DestinationFactory, DestinationFactoryManager}
 import play.api.inject.ApplicationLifecycle
 
+import scala.collection.JavaConverters._
 import scala.concurrent.Future
 
 abstract class CoreModule(val eagerly: Boolean = true) extends AbstractModule {
@@ -49,6 +51,14 @@ object CoreModule {
       }
 
       bus
+    }
+  }
+
+  def registerDestinationFactory(bus: Bus, transportFactory: DestinationFactory): Unit = {
+    val destinationFactoryManager = bus.getExtension(classOf[DestinationFactoryManager])
+
+    transportFactory.getTransportIds.asScala.foreach { transportIds =>
+      destinationFactoryManager.registerDestinationFactory(transportIds, transportFactory)
     }
   }
 }

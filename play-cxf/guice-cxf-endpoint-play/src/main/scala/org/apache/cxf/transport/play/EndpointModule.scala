@@ -1,13 +1,12 @@
 package org.apache.cxf.transport.play
 
-import javax.inject.{Inject, Provider, Singleton}
+import com.google.inject.{Inject, Provider, Singleton}
 
 import com.google.inject.name.Names
 import com.typesafe.config.{Config, ConfigFactory, ConfigObject}
 import org.apache.cxf.binding.soap.{SoapBindingConfiguration, SoapVersion}
 import org.apache.cxf.config.DynamicConfig
 import org.apache.cxf.jaxws.EndpointImpl
-import org.apache.cxf.transport.DestinationFactoryManager
 import org.apache.cxf.{Bus, CoreModule}
 import play.api.Configuration
 
@@ -51,9 +50,7 @@ object EndpointModule {
         .map(_.asJava)
         .foreach(factory.setTransportIds)
 
-      val dfm = bus.getExtension(classOf[DestinationFactoryManager])
-
-      factory.getTransportIds.asScala.foreach(dfm.registerDestinationFactory(_, factory))
+      CoreModule.registerDestinationFactory(bus, factory)
 
       factory
     }

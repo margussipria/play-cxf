@@ -1,15 +1,12 @@
 package org.apache.cxf
 
-import javax.inject.{Inject, Provider, Singleton}
-
+import com.google.inject.{Inject, Provider, Singleton}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.cxf.binding.soap.{SoapBindingConfiguration, SoapVersion}
 import org.apache.cxf.config.DynamicConfig
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
-import org.apache.cxf.transport.DestinationFactoryManager
 import org.apache.cxf.transport.http.HTTPTransportFactory
 
-import scala.collection.JavaConverters._
 import scala.reflect.{ClassTag, _}
 
 abstract class ClientModule(eagerly: Boolean = true) extends CoreModule(eagerly) {
@@ -43,9 +40,7 @@ object ClientModule {
     def get(): HTTPTransportFactory = {
       val factory = new HTTPTransportFactory
 
-      val dfm = bus.getExtension(classOf[DestinationFactoryManager])
-
-      factory.getTransportIds.asScala.foreach(dfm.registerDestinationFactory(_, factory))
+      CoreModule.registerDestinationFactory(bus, factory)
 
       factory
     }
@@ -54,9 +49,15 @@ object ClientModule {
   class ClientProvider[T : ClassTag](key: String, wrappers: Seq[Class[_ <: ClientWrapper]] = Seq.empty) extends javax.inject.Provider[T] {
     @Inject var bus: Bus = _
     @Inject var injector: com.google.inject.Injector = _
+    var config: Config = ConfigFactory.load()
+
+    @Inject(optional = true)
+    def setConfig(config: Config): Unit = {
+      this.config = config
+    }
 
     override def get(): T = {
-      val config = ConfigFactory.load().getConfig(ClientKeyConfig)
+      val config = this.config.getConfig(ClientKeyConfig)
 
       val factory = new JaxWsProxyFactoryBean()
       factory.setBus(bus)

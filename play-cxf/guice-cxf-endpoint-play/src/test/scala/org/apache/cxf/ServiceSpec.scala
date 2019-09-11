@@ -23,20 +23,20 @@ class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers
 
   type Builder = GuiceApplicationBuilder
 
-  private def withApplication(f: Builder => Builder = builder => builder)(testCode: Application => Any): Any = {
+  class DateAndTimeServiceModule extends EndpointModule(false) {
 
-    class DateAndTimeServiceModule extends EndpointModule(false) {
-
-      override def configure(): Unit = {
-        bindEndpoint("DateAndTimeService", Seq.empty)
-      }
+    override def configure(): Unit = {
+      bindEndpoint("DateAndTimeService", Seq.empty)
     }
+  }
 
-    class DateAndTimeClientModule extends ClientModule(false) {
-      override def configure(): Unit = {
-        bindClient[DateAndTime]("org.apache.date_and_time_soap_http.DateAndTime", Seq.empty)
-      }
+  class DateAndTimeClientModule extends ClientModule(false) {
+    override def configure(): Unit = {
+      bindClient[DateAndTime]("org.apache.date_and_time_soap_http.DateAndTime", Seq.empty)
     }
+  }
+
+  private def withApplication(f: Builder => Builder = identity)(testCode: Application => Any): Any = {
 
     val builder = GuiceApplicationBuilder(eagerly = true)
       .bindings(
@@ -51,8 +51,8 @@ class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers
       )
 
       .appRoutes( app => {
-        case ("GET",  "/service") => app.injector.instanceOf[org.apache.cxf.transport.play.CxfController].handle()
-        case ("POST", "/service") => app.injector.instanceOf[org.apache.cxf.transport.play.CxfController].handle()
+        case ("GET" | "POST", "/service") =>
+          app.injector.instanceOf[org.apache.cxf.transport.play.CxfController].handle()
       })
       .loadConfig(
         Configuration.load(Environment.simple(new File(getClass.getResource("/application.conf").getPath)))
