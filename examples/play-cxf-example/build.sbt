@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
 
 libraryDependencies += "eu.sipria.play" %% "play-guice-cxf_play26" % "1.6.0"
 
-version in cxf := CxfVersion
+version in CXF := CxfVersion
 
 defaultArgs in wsdl2java := Seq(
   "-p", "services.sunset.rise"
