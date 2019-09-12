@@ -6,7 +6,7 @@ name := "play-cxf-example"
 
 version := "1.0-SNAPSHOT"
 
-scalaVersion := "2.11.11"
+scalaVersion := "2.12.10"
 
 val playVersionSuffix: String = {
   val versions = PlayVersion.current.split('.')
@@ -14,7 +14,7 @@ val playVersionSuffix: String = {
   versions.take(2).mkString
 }
 
-val CxfVersion = "3.1.12"
+val CxfVersion = "3.2.10"
 
 libraryDependencies ++= Seq(
   guice,
@@ -24,15 +24,15 @@ libraryDependencies ++= Seq(
   "org.apache.cxf" % "cxf-rt-transports-http"   % CxfVersion
 )
 
-libraryDependencies += "eu.sipria.play" %% "play-guice-cxf_play26" % "1.6.0"
+libraryDependencies += "eu.sipria.play" %% "play-guice-cxf_play26" % "1.6.4"
 
 version in CXF := CxfVersion
 
-defaultArgs in wsdl2java := Seq(
+cxfDefaultArgs := Seq(
   "-p", "services.sunset.rise"
 )
 
-wsdls in wsdl2java := Seq(
+cxfWSDLs := Seq(
   Wsdl("SunsetRiseService", (resourceDirectory in Compile).value / "sunsetriseservice.wsdl", Seq(
     "-wsdlLocation", "conf/sunsetriseservice.wsdl"
   ))
@@ -42,8 +42,6 @@ scalacOptions := Seq(
   "-deprecation"
 )
 
-lazy val playCxf = RootProject(file("../../play-cxf/"))
-
 lazy val myInfo = taskKey[Seq[File]]("List")
 lazy val newList = taskKey[Seq[File]]("List")
 
@@ -51,7 +49,6 @@ lazy val root = Project("play-cxf-example", file("."))
   .enablePlugins(PlayScala)
   .enablePlugins(CxfPlugin)
   .enablePlugins(BuildInfoPlugin)
-  .dependsOn(playCxf)
   .settings(
     buildInfoKeys := Seq[BuildInfoKey](name, version),
     buildInfoPackage := "hello",
