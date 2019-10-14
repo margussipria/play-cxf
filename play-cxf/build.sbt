@@ -4,7 +4,7 @@ def playVersionSuffix: String = {
   versions.take(2).mkString
 }
 
-val CxfVersion = "3.2.10"
+val CxfVersion = "3.3.3"
 val PlayVersion = play.core.PlayVersion.current
 
 enablePlugins(JacocoPlugin)
@@ -19,12 +19,12 @@ def module(id: String, base: java.io.File): Project = {
 
       organization := "eu.sipria.play",
 
-      version := "1.6.5-SNAPSHOT",
+      version := "1.7.0-SNAPSHOT",
 
       scalaVersion := "2.12.10",
-      crossScalaVersions := Seq("2.11.12", "2.12.10"),
+      crossScalaVersions := Seq("2.11.12", "2.12.10", "2.13.1"),
 
-      scalacOptions := Seq(
+      scalacOptions ++= Seq(
         "-deprecation"
       ),
 
@@ -55,7 +55,7 @@ val guiceClient = module("guice-cxf-client", file("guice-cxf-client"))
       "org.apache.cxf" % "cxf-rt-transports-http" % CxfVersion  % Provided,
       "org.apache.cxf" % "cxf-rt-frontend-jaxws"  % CxfVersion  % Provided,
 
-      "com.typesafe" % "config"                   % "1.3.4"
+      "com.typesafe" % "config"                   % "1.4.0"
     )
   )
   .dependsOn(guiceCore)
@@ -64,9 +64,13 @@ val guiceClient = module("guice-cxf-client", file("guice-cxf-client"))
 val guicePlayEndpoint = module("guice-cxf-endpoint-play", file("guice-cxf-endpoint-play"))
   .enablePlugins(CxfPlugin)
   .settings(
+
     libraryDependencies ++= Seq(
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.2",
+
       "com.typesafe.play" %% "play"                 % PlayVersion % Provided,
       "com.typesafe.play" %% "play-guice"           % PlayVersion % Provided,
+      "com.typesafe.play" %% "play-logback"         % PlayVersion % Test,
 
       "org.apache.cxf" % "cxf-core"                 % CxfVersion,
       "org.apache.cxf" % "cxf-rt-frontend-jaxws"    % CxfVersion  % Provided,
@@ -77,8 +81,19 @@ val guicePlayEndpoint = module("guice-cxf-endpoint-play", file("guice-cxf-endpoi
       "org.apache.cxf" % "cxf-rt-transports-http"   % CxfVersion  % Test,
 
       "org.scalatest"           %% "scalatest"          % "3.0.8" % Test,
-      "org.scalatestplus.play"  %% "scalatestplus-play" % "3.1.2" % Test
+      "org.scalatestplus.play"  %% "scalatestplus-play" % "4.0.3" % Test
     ),
+
+    libraryDependencies ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, major)) if major >= 13 =>
+          Seq(
+            "org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0" % Test
+          )
+        case _ =>
+          Seq.empty
+      }
+    },
 
     CXF / version := CxfVersion,
 

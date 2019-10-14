@@ -10,7 +10,7 @@ import org.apache.cxf.jaxws.EndpointImpl
 import org.apache.cxf.{Bus, CoreModule}
 import play.api.Configuration
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 abstract class EndpointModule(eagerly: Boolean = true) extends CoreModule(eagerly) {
   import EndpointModule._

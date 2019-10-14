@@ -29,7 +29,7 @@ object ConfigReader  {
   }
   implicit object StringSeqReader extends ConfigReader[Seq[String]] {
     def apply(path: String, config: Config): Seq[String] =
-      config.getStringList(path).asScala
+      config.getStringList(path).asScala.toSeq
   }
 
   implicit object ConfigReader extends ConfigReader[Config] {
@@ -48,7 +48,7 @@ object ConfigReader  {
   implicit def customConfigSeqReader[T: StringReader]: ConfigReader[Seq[T]] = new ConfigReader[Seq[T]] {
     def apply(path: String, config: Config): Seq[T] = {
       val reader = implicitly[StringReader[T]]
-      config.getStringList(path).asScala.map(reader.apply)
+      config.getStringList(path).asScala.map(reader.apply).toSeq
     }
   }
 }

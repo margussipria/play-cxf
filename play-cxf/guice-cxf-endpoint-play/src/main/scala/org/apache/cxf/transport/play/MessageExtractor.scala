@@ -34,6 +34,6 @@ class MessageExtractorImpl extends MessageExtractor {
   }
 
   protected def headersAsJava(implicit request: Request[RawBuffer]): java.util.Map[String, java.util.List[String]] = {
-    request.headers.toMap.mapValues(_.asJava).asJava
+    request.headers.toMap.mapValues(_.asJava).toMap.asJava
   }
 }

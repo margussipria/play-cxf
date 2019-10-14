@@ -104,11 +104,13 @@ class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers
       val service = app.injector.instanceOf[DateAndTime]
       val queue = interceptResponseCode(service)
 
-      (1 to 25).par.map { _ => service.askTime(request) } foreach { response =>
+      val end = 25
+
+      collection.parallel.immutable.ParSeq.range(1, end + 1).map { _ => service.askTime(request) } foreach { response =>
         response.getResponse.toString should be ("2013-10-28T00:04:00.000")
       }
 
-      queue should have size 25
+      queue should have size end
       queue should contain only "200"
     }
 
