@@ -7,7 +7,7 @@ import com.google.inject.ImplementedBy
 import org.apache.cxf.message.{Message, MessageImpl}
 import play.api.mvc.{RawBuffer, Request}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 @ImplementedBy(value = classOf[MessageExtractorImpl])
 trait MessageExtractor {
@@ -34,6 +34,6 @@ class MessageExtractorImpl extends MessageExtractor {
   }
 
   protected def headersAsJava(implicit request: Request[RawBuffer]): java.util.Map[String, java.util.List[String]] = {
-    request.headers.toMap.mapValues(_.asJava).toMap.asJava
+    request.headers.toMap.map { case (key, value) => (key, value.asJava) }.asJava
   }
 }

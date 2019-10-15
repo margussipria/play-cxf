@@ -3,7 +3,7 @@ package org.apache.cxf.config
 import com.typesafe.config.Config
 import org.apache.cxf.binding.soap.{Soap11, Soap12, SoapVersion}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 trait ConfigReader[T] {
   def apply(path: String, config: Config): T

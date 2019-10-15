@@ -40,6 +40,8 @@ def module(id: String, base: java.io.File): Project = {
 val guiceCore = module("guice-cxf-core", file("guice-cxf-core"))
   .settings(
     libraryDependencies ++= Seq(
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.2",
+
       "org.apache.cxf" % "cxf-core"               % CxfVersion,
       "org.apache.cxf" % "cxf-rt-frontend-jaxws"  % CxfVersion  % Provided,
 
@@ -66,8 +68,6 @@ val guicePlayEndpoint = module("guice-cxf-endpoint-play", file("guice-cxf-endpoi
   .settings(
 
     libraryDependencies ++= Seq(
-      "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.2",
-
       "com.typesafe.play" %% "play"                 % PlayVersion % Provided,
       "com.typesafe.play" %% "play-guice"           % PlayVersion % Provided,
       "com.typesafe.play" %% "play-logback"         % PlayVersion % Test,
