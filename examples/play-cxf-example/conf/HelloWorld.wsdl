@@ -1,0 +1,97 @@
+<wsdl:definitions name="HelloWorld"
+                  targetNamespace="http://apache.org/hello_world_soap_http"
+                  xmlns="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xmlns:tns="http://apache.org/hello_world_soap_http"
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://apache.org/hello_world_soap_http" elementFormDefault="qualified">
+      <xsd:simpleType name="MyStringType">
+        <xsd:restriction base="xsd:string">
+          <xsd:maxLength value="30" />
+        </xsd:restriction>
+      </xsd:simpleType>
+
+      <xsd:element name="sayHi">
+        <xsd:complexType />
+      </xsd:element>
+      <xsd:element name="sayHiResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="responseType" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="greetMe">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="requestType" type="tns:MyStringType"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="greetMeResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="responseType" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="sayHiRequest">
+    <wsdl:part element="tns:sayHi" name="in"/>
+  </wsdl:message>
+  <wsdl:message name="sayHiResponse">
+    <wsdl:part element="tns:sayHiResponse" name="out"/>
+  </wsdl:message>
+  <wsdl:message name="greetMeRequest">
+    <wsdl:part element="tns:greetMe" name="in"/>
+  </wsdl:message>
+  <wsdl:message name="greetMeResponse">
+    <wsdl:part element="tns:greetMeResponse" name="out"/>
+  </wsdl:message>
+
+  <wsdl:portType name="Greeter">
+    <wsdl:operation name="sayHi">
+      <wsdl:input message="tns:sayHiRequest" name="sayHiRequest"/>
+      <wsdl:output message="tns:sayHiResponse" name="sayHiResponse"/>
+    </wsdl:operation>
+
+    <wsdl:operation name="greetMe">
+      <wsdl:input message="tns:greetMeRequest" name="greetMeRequest"/>
+      <wsdl:output message="tns:greetMeResponse" name="greetMeResponse"/>
+    </wsdl:operation>
+
+  </wsdl:portType>
+  <wsdl:binding name="Greeter_SOAPBinding" type="tns:Greeter">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+    <wsdl:operation name="sayHi">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="sayHiRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="sayHiResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+
+    <wsdl:operation name="greetMe">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="greetMeRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="greetMeResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+
+  </wsdl:binding>
+  <wsdl:service name="SOAPService">
+    <wsdl:port binding="tns:Greeter_SOAPBinding" name="SoapPort">
+      <soap:address location="http://localhost:9000/HelloWorld" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

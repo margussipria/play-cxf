@@ -1,8 +1,11 @@
-import org.specs2.mutable._
-import org.specs2.runner._
-import org.junit.runner._
 
-import play.api.test._
+import controllers.Application
+import org.junit.runner._
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
 /**
@@ -11,20 +14,19 @@ import play.api.test.Helpers._
  * For more information, consult the wiki.
  */
 @RunWith(classOf[JUnitRunner])
-class ApplicationSpec extends Specification {
+class ApplicationSpec extends PlaySpec with GuiceOneAppPerSuite with ScalaFutures {
 
   "Application" should {
 
-    "send 404 on a bad request" in new WithApplication{
-      route(FakeRequest(GET, "/boum")) must beNone
-    }
+    "render the index page" in {
 
-    "render the index page" in new WithApplication{
-      val home = route(FakeRequest(GET, "/")).get
+      val request = FakeRequest(GET, "/")
 
-      status(home) must equalTo(OK)
-      contentType(home) must beSome.which(_ == "text/html")
-      contentAsString(home) must contain ("Your new application is ready.")
+      val home = app.injector.instanceOf(classOf[Application]).index(request)
+
+      status(home) must be (OK)
+      contentType(home) must contain ("text/plain")
+      contentAsString(home) must be ("Your new application is ready.")
     }
   }
 }

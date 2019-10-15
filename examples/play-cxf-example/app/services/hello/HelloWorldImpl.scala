@@ -2,16 +2,16 @@ package services.hello
 
 import javax.jws.WebService
 
-@WebService(endpointInterface = "services.hello.HelloWorld")
-class HelloWorldImpl extends HelloWorld {
+import services.Greeter
 
-    @Override
-    def sayHi(text: String): String = {
-        "Hello " + text
+@WebService(endpointInterface = "services.Greeter")
+class HelloWorldImpl extends Greeter {
+
+    def greetMe(requestType: String): String = {
+        "Hello " + requestType
     }
 
-    @Override
-    def abc(word: String): String = {
-        word.toLowerCase()
+    def sayHi(): String = {
+        "Hello " + hello.BuildInfo.toString
     }
 }

@@ -1,24 +1,37 @@
-import org.specs2.mutable._
-import org.specs2.runner._
-import org.junit.runner._
 
-import play.api.test._
+import org.junit.runner._
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
+import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.guice.GuiceOneServerPerTest
+import play.api.libs.ws.WSClient
 import play.api.test.Helpers._
 
 /**
  * add your integration spec here.
- * An integration test will fire up a whole play application in a real (or headless) browser
+ * An integration test will fire up a whole play application
  */
 @RunWith(classOf[JUnitRunner])
-class IntegrationSpec extends Specification {
+class IntegrationSpec extends PlaySpec with GuiceOneServerPerTest with ScalaFutures with IntegrationPatience {
 
   "Application" should {
 
-    "work from within a browser" in new WithBrowser {
+    "send 404 on a bad request" in {
+      implicit val wsClient: WSClient = app.injector.instanceOf(classOf[WSClient])
 
-      browser.goTo("http://localhost:" + port)
+      val futureResult = wsUrl("/testing").get
+      val result = futureResult.futureValue
 
-      browser.pageSource must contain("Your new application is ready.")
+      result.status must be (NOT_FOUND)
+    }
+
+    "work from within a browser" in {
+      implicit val wsClient: WSClient = app.injector.instanceOf(classOf[WSClient])
+
+      val futureResult = wsUrl("/").get
+      val response = futureResult.futureValue
+
+      response.status must be (OK)
     }
   }
 }

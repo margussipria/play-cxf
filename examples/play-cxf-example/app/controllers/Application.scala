@@ -2,31 +2,19 @@ package controllers
 
 import javax.inject.Inject
 
-import org.joda.time.DateTime
 import play.api.mvc._
-import services.sunset.rise.{LatLonDate, SunSetRiseServiceSoap}
+import services.Greeter
 
 class Application @Inject() (
-  service: SunSetRiseServiceSoap,
+  service: Greeter,
   controllerComponents: ControllerComponents
 ) extends AbstractController(controllerComponents) {
 
-  def index = Action {
+  def index: Action[AnyContent] = Action {
     Ok("Your new application is ready.")
   }
 
-  def sunriseLondon = Action {
-    val now = DateTime.now()
-    val request = new LatLonDate
-    request.setYear(now.getYear)
-    request.setMonth(now.getMonthOfYear)
-    request.setDay(now.getDayOfMonth)
-    request.setLatitude(60.1733244f)
-    request.setLongitude(24.9410248f)
-
-    val response = service.getSunSetRiseTime(request)
-
-    Ok(s"Sunrise in Helsinki: ${response.getSunRiseTime}")
+  def hi: Action[AnyContent] = Action {
+    Ok(service.sayHi())
   }
-
 }
