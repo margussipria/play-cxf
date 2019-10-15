@@ -4,8 +4,11 @@ import java.io.OutputStream
 
 import javax.inject.{Inject, Singleton}
 
-import akka.stream.scaladsl.StreamConverters
+import akka.stream.Materializer
+import akka.stream.scaladsl.{Sink, Source, StreamConverters}
+import akka.util.ByteString
 import org.apache.cxf.message.Message
+import play.api.http.HttpEntity
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -16,35 +19,81 @@ class CxfController @Inject() (
   transportFactory: PlayTransportFactory,
   controllerComponents: ControllerComponents,
   messageExtractor: MessageExtractor
-)(implicit ec: ExecutionContext) extends AbstractController(controllerComponents) {
+)(implicit ec: ExecutionContext, materializer: Materializer) extends AbstractController(controllerComponents) {
 
   val maxRequestSize: Int = 1024 * 1024
 
-  def handle(path: String = ""): Action[RawBuffer] = Action.async(parse.raw(maxRequestSize)) { implicit request =>
-    val messagePromise = Promise[Message]()
+  @deprecated("Select handleStrict, handleStreamed or handleChunked methods", "1.7.0")
+  def handle(path: String = ""): Action[RawBuffer] = handleRequest(path)(toChunkedResult)
 
-    Future {
-      val message = messageExtractor.extractMessage
-      message.put(PlayDestination.PLAY_MESSAGE_PROMISE, messagePromise)
+  /**
+   * Handler with a strict entity response.
+   *
+   * Strict entities are contained entirely in memory.
+   */
+  def handleStrict(path: String = ""): Action[RawBuffer] = handleRequest(path)(toStrictResult)
 
-      getDestination.dispatchMessage(message)
-    } andThen {
-      case Failure(exception) =>
-        messagePromise.tryFailure(exception)
+  /**
+   * Handler with a streamed entity response.
+   *
+   * This entity will be close delimited.
+   */
+  def handleStreamed(path: String = ""): Action[RawBuffer] = handleRequest(path)(toStreamedResult)
+
+  /**
+   * Handler with a chunked entity response.
+   */
+  def handleChunked(path: String = ""): Action[RawBuffer] = handleRequest(path)(toChunkedResult)
+
+  protected def handleRequest(path: String = "")(createResult: (Int, Source[ByteString, _], String) => Future[Result]): Action[RawBuffer] = {
+    Action.async(parse.raw(maxRequestSize)) { implicit request =>
+      val messagePromise = Promise[Message]()
+
+      Future {
+        val message = messageExtractor.extractMessage
+        message.put(PlayDestination.PLAY_MESSAGE_PROMISE, messagePromise)
+
+        getDestination.dispatchMessage(message)
+      } andThen {
+        case Failure(exception) =>
+          messagePromise.tryFailure(exception)
+      }
+
+      messagePromise.future flatMap { message =>
+
+        val source = StreamConverters.asOutputStream().mapMaterializedValue(outputStream => Future {
+          val delayedOutputStream = message.getContent(classOf[OutputStream]).asInstanceOf[DelayedOutputStream]
+
+          delayedOutputStream.flush()
+          delayedOutputStream.setTarget(outputStream)
+        })
+
+        val responseCode = Option(message.get(Message.RESPONSE_CODE)) map (_.toString) map (_.toInt) getOrElse OK
+        val contentType = message.get(Message.CONTENT_TYPE).asInstanceOf[String]
+
+        createResult(responseCode, source, contentType)
+      }
     }
+  }
 
-    messagePromise.future.map { message =>
+  protected def toStrictResult(responseCode: Int, source: Source[ByteString, _], contentType: String): Future[Result] = {
+    source.runWith(Sink.reduce[ByteString](_ ++ _)) map { data =>
+      Status(responseCode).sendEntity(
+        HttpEntity.Strict(data, Some(contentType))
+      )
+    }
+  }
 
-      val source = StreamConverters.asOutputStream().mapMaterializedValue(outputStream => Future {
-        val delayedOutputStream = message.getContent(classOf[OutputStream]).asInstanceOf[DelayedOutputStream]
+  protected def toStreamedResult(responseCode: Int, source: Source[ByteString, _], contentType: String): Future[Result] = {
+    Future.successful {
+      Status(responseCode).sendEntity(
+        HttpEntity.Streamed(source, None, Some(contentType))
+      )
+    }
+  }
 
-        delayedOutputStream.flush()
-        delayedOutputStream.setTarget(outputStream)
-      })
-
-      val responseCode = Option(message.get(Message.RESPONSE_CODE)) map (_.toString) map (_.toInt) getOrElse OK
-      val contentType = message.get(Message.CONTENT_TYPE).asInstanceOf[String]
-
+  protected def toChunkedResult(responseCode: Int, source: Source[ByteString, _], contentType: String): Future[Result] = {
+    Future.successful {
       Status(responseCode).chunked(source).as(contentType)
     }
   }

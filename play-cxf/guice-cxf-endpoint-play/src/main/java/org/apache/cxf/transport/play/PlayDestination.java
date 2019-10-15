@@ -62,10 +62,10 @@ public class PlayDestination extends AbstractDestination {
   @Override
   protected Conduit getInbuiltBackChannel(Message inMessage) {
     @SuppressWarnings("unchecked")
-    Promise<Message> messsagePromise = (Promise<Message>) inMessage.get(PLAY_MESSAGE_PROMISE);
+    Promise<Message> messagePromise = (Promise<Message>) inMessage.get(PLAY_MESSAGE_PROMISE);
     inMessage.remove(PLAY_MESSAGE_PROMISE);
 
-    return new PlayBackChannelConduit(this, messsagePromise);
+    return new PlayBackChannelConduit(this, messagePromise);
   }
 
   @Override

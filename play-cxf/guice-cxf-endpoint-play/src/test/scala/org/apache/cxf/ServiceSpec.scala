@@ -11,13 +11,16 @@ import org.apache.cxf.message.Message
 import org.apache.cxf.phase.{AbstractPhaseInterceptor, Phase}
 import org.apache.cxf.transport.play.EndpointModule
 import org.apache.date_and_time_soap_http.{AskTimeRequest, DateAndTime}
+import org.scalactic.StringNormalizations.lowerCased
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FreeSpec, Matchers}
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModuleConversions}
-import play.api.test.{Helpers, TestServer}
+import play.api.test.{Helpers, TestServer, WsTestClient}
 import play.api.{Application, Configuration, Environment}
 
-import scala.language.implicitConversions
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.language.{implicitConversions, postfixOps}
 
 class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers with ScalaFutures {
 
@@ -26,7 +29,9 @@ class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers
   class DateAndTimeServiceModule extends EndpointModule(false) {
 
     override def configure(): Unit = {
-      bindEndpoint("DateAndTimeService", Seq.empty)
+      bindEndpoint("DateAndTimeServiceStrict", Seq.empty)
+      bindEndpoint("DateAndTimeServiceStreamed", Seq.empty)
+      bindEndpoint("DateAndTimeServiceChunked", Seq.empty)
     }
   }
 
@@ -51,8 +56,12 @@ class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers
       )
 
       .appRoutes( app => {
-        case ("GET" | "POST", "/service") =>
-          app.injector.instanceOf[org.apache.cxf.transport.play.CxfController].handle()
+        case ("GET" | "POST", "/service/strict") =>
+          app.injector.instanceOf[org.apache.cxf.transport.play.CxfController].handleStrict()
+        case ("GET" | "POST", "/service/streamed") =>
+          app.injector.instanceOf[org.apache.cxf.transport.play.CxfController].handleStreamed()
+        case ("GET" | "POST", "/service/chunked") =>
+          app.injector.instanceOf[org.apache.cxf.transport.play.CxfController].handleChunked()
       })
       .loadConfig(
         Configuration.load(Environment.simple(new File(getClass.getResource("/application.conf").getPath)))
@@ -145,6 +154,52 @@ class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers
 
       queue should have size 1
       queue should contain ("500")
+    }
+
+    "when asking wsdl" - {
+
+      "should return content as strict" in withApplication (identity) { app =>
+
+        WsTestClient.withClient { client =>
+
+          val result = Await.result(
+            client.url("http://localhost:19001/service/strict?wsdl").get(),
+            10 seconds
+          )
+
+          (result.headers should contain key ("Content-Length")) (after being lowerCased)
+        }
+      }
+
+      "should return content as streamed" in withApplication (identity) { app =>
+
+        WsTestClient.withClient { client =>
+
+          val result = Await.result(
+            client.url("http://localhost:19001/service/streamed?wsdl").get(),
+            10 seconds
+          )
+
+          (result.headers should not contain key ("Content-Length")) (after being lowerCased)
+          (result.headers should not contain key ("Transfer-Encoding")) (after being lowerCased)
+        }
+      }
+
+      "should return content as chunked" in withApplication (identity) { app =>
+
+        WsTestClient.withClient { client =>
+
+          val result = Await.result(
+            client.url("http://localhost:19001/service/chunked?wsdl").get(),
+            10 seconds
+          )
+
+          (result.headers should contain key ("Transfer-Encoding")) (after being lowerCased)
+
+          result.headers("Transfer-Encoding") should contain ("chunked")
+        }
+      }
+
     }
   }
 
