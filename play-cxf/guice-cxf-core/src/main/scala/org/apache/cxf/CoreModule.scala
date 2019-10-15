@@ -7,7 +7,7 @@ import com.google.inject.{AbstractModule, Key, Scopes}
 import org.apache.cxf.transport.{DestinationFactory, DestinationFactoryManager}
 import play.api.inject.ApplicationLifecycle
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.Future
 
 abstract class CoreModule(val eagerly: Boolean = true) extends AbstractModule {
