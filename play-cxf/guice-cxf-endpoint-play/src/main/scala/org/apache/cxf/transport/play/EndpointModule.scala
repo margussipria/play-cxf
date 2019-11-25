@@ -1,16 +1,11 @@
 package org.apache.cxf.transport.play
 
-import com.google.inject.{Inject, Provider, Singleton}
-
 import com.google.inject.name.Names
-import com.typesafe.config.{Config, ConfigFactory, ConfigObject}
-import org.apache.cxf.binding.soap.{SoapBindingConfiguration, SoapVersion}
-import org.apache.cxf.config.DynamicConfig
+import com.google.inject.{Inject, Provider, Singleton}
+import org.apache.cxf.config.{Configuration => CustomConfiguration}
 import org.apache.cxf.jaxws.EndpointImpl
 import org.apache.cxf.{Bus, CoreModule}
-import play.api.Configuration
-
-import scala.jdk.CollectionConverters._
+import play.api.{ConfigLoader, Configuration}
 
 abstract class EndpointModule(eagerly: Boolean = true) extends CoreModule(eagerly) {
   import EndpointModule._
@@ -46,8 +41,9 @@ object EndpointModule {
     def get(): PlayTransportFactory = {
       val factory = new PlayTransportFactory
 
-      configuration.getOptional[Seq[String]]("apache.cxf.play.transports")
-        .map(_.asJava)
+      implicit val javaStringListLoader: ConfigLoader[java.util.List[String]] = ConfigLoader(_.getStringList)
+
+      configuration.getOptional[java.util.List[String]]("apache.cxf.play.transports")
         .foreach(factory.setTransportIds)
 
       CoreModule.registerDestinationFactory(bus, factory)
@@ -64,29 +60,28 @@ object EndpointModule {
 
     def get(): EndpointImpl = {
       val config = configuration.getOptional[Configuration](EndpointKeyConfig)
-        .flatMap(_.getOptional[ConfigObject](key))
-        .getOrElse(ConfigFactory.empty.root)
+        .flatMap(_.getOptional[Configuration](key))
+        .getOrElse(Configuration.empty)
 
       val implementorClazz = Thread.currentThread().getContextClassLoader.loadClass(
-        config.toConfig.getString("implementor")
+        config.get[String]("implementor")
       )
 
       val endpoint = new EndpointImpl(bus, injector.instanceOf(implementorClazz))
 
-      val dynamicConfig = new DynamicConfig(config.toConfig)
-      dynamicConfig.bindingConfig.asOption[Config].map(new DynamicConfig(_)).map { config =>
-        val bindingConfig = new SoapBindingConfiguration
+      implicit val configWrapperLoader: ConfigLoader[CustomConfiguration] = {
+        ConfigLoader(_.getConfig).map(CustomConfiguration.apply)
+      }
 
-        config.version.asOption[SoapVersion].foreach(bindingConfig.setVersion)
-
-        bindingConfig
-      }.foreach(endpoint.setBindingConfig)
+      config.getOptional[CustomConfiguration]("bindingConfig")
+        .map(CoreModule.createBindingConfig)
+        .foreach(endpoint.setBindingConfig)
 
       wrappers.foreach { wrapperClass =>
         injector.instanceOf(wrapperClass).callback(endpoint)
       }
 
-      endpoint.publish(config.toConfig.getString("address"))
+      endpoint.publish(config.get[String]("address"))
 
       endpoint
     }

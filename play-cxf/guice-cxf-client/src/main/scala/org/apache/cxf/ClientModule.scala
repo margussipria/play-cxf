@@ -2,12 +2,13 @@ package org.apache.cxf
 
 import com.google.inject.{Inject, Provider, Singleton}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.apache.cxf.binding.soap.{SoapBindingConfiguration, SoapVersion}
-import org.apache.cxf.config.DynamicConfig
+import org.apache.cxf.config.Configuration
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean
 import org.apache.cxf.transport.http.HTTPTransportFactory
 
-import scala.reflect.{ClassTag, _}
+import scala.collection.Seq
+import scala.collection.immutable
+import scala.reflect.{ClassTag, classTag}
 
 abstract class ClientModule(eagerly: Boolean = true) extends CoreModule(eagerly) {
   import ClientModule._
@@ -21,12 +22,15 @@ abstract class ClientModule(eagerly: Boolean = true) extends CoreModule(eagerly)
     }
   }
 
-  protected def bindClient[T : ClassTag](key: String, wrappers: Seq[Class[_ <: ClientWrapper]] = Seq.empty): Unit = {
+  protected def bindClient[T : ClassTag](
+    key: String,
+    @deprecatedName(Symbol("wrappers")) hooks: Seq[Class[_ <: ClientSetupHooks]] = Seq.empty
+  ): Unit = {
     bindHTTPTransport()
 
     maybeEagerly {
       bind(classTag[T].runtimeClass.asInstanceOf[Class[T]])
-        .toProvider(new ClientProvider[T](key, wrappers))
+        .toProvider(new ClientProvider[T](key, hooks))
     }
   }
 }
@@ -46,7 +50,10 @@ object ClientModule {
     }
   }
 
-  class ClientProvider[T : ClassTag](key: String, wrappers: Seq[Class[_ <: ClientWrapper]] = Seq.empty) extends javax.inject.Provider[T] {
+  class ClientProvider[T : ClassTag](
+    key: String,
+    @deprecatedName(Symbol("wrappers")) hooks: Seq[Class[_ <: ClientSetupHooks]] = Seq.empty
+  ) extends javax.inject.Provider[T] {
     @Inject var bus: Bus = _
     @Inject var injector: com.google.inject.Injector = _
     var config: Config = ConfigFactory.load()
@@ -59,28 +66,42 @@ object ClientModule {
     override def get(): T = {
       val config = this.config.getConfig(ClientKeyConfig)
 
+      val initializedHooks = hooks.map(injector.getInstance(_))
+
       val factory = new JaxWsProxyFactoryBean()
       factory.setBus(bus)
       factory.setServiceClass(classTag[T].runtimeClass.asInstanceOf[Class[T]])
 
-      Option(config.getObject(key)).foreach { config =>
-        val dynamicConfig = new DynamicConfig(config.toConfig)
-        dynamicConfig.address.asOption[String].foreach(factory.setAddress)
+      initializedHooks.foreach(_.preConfiguration(factory))
 
-        dynamicConfig.bindingConfig.asOption[Config].map(new DynamicConfig(_)).map { config =>
-          val bindingConfig = new SoapBindingConfiguration
-
-          config.version.asOption[SoapVersion].foreach(bindingConfig.setVersion)
-
-          bindingConfig
-        }.foreach(factory.setBindingConfig)
+      val proxyProperties: java.util.Map[String, AnyRef] = Option(factory.getProperties).getOrElse {
+        val proxyProperties = new java.util.HashMap[String, AnyRef]
+        factory.setProperties(proxyProperties)
+        proxyProperties
       }
+
+      Configuration(config).asOption[Configuration](key).foreach { clientConfig =>
+
+        clientConfig.asOption[String]("address").foreach(factory.setAddress)
+
+        clientConfig.asOption[Configuration]("bindingConfig")
+          .map(CoreModule.createBindingConfig)
+          .foreach(factory.setBindingConfig)
+      }
+
+      initializedHooks
+        .foldLeft(immutable.Map.empty[String, AnyRef]) { case (map, hookContainer) =>
+          map ++ hookContainer.getProperties
+        }
+        .foreach { case (key, value) =>
+          proxyProperties.put(key, value)
+        }
+
+      initializedHooks.foreach(_.postConfiguration(factory))
 
       val service = factory.create()
 
-      wrappers.foreach { wrapperClass =>
-        injector.getInstance(wrapperClass).callback(service)
-      }
+      initializedHooks.foreach(_.postCreate(service))
 
       service.asInstanceOf[T]
     }

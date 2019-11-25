@@ -4,11 +4,13 @@ import javax.inject.{Inject, Provider, Singleton}
 
 import com.google.inject.binder.ScopedBindingBuilder
 import com.google.inject.{AbstractModule, Key, Scopes}
+import org.apache.cxf.binding.soap.{SoapBindingConfiguration, SoapVersion}
+import org.apache.cxf.config.Configuration
 import org.apache.cxf.transport.{DestinationFactory, DestinationFactoryManager}
 import play.api.inject.ApplicationLifecycle
 
-import scala.jdk.CollectionConverters._
 import scala.concurrent.Future
+import scala.jdk.CollectionConverters._
 
 abstract class CoreModule(val eagerly: Boolean = true) extends AbstractModule {
   import CoreModule._
@@ -60,5 +62,13 @@ object CoreModule {
     transportFactory.getTransportIds.asScala.foreach { transportIds =>
       destinationFactoryManager.registerDestinationFactory(transportIds, transportFactory)
     }
+  }
+
+  protected[cxf] def createBindingConfig(bindingConfig: Configuration): SoapBindingConfiguration = {
+    val bindingConfiguration = new SoapBindingConfiguration
+
+    bindingConfig.asOption[SoapVersion]("version").foreach(bindingConfiguration.setVersion)
+
+    bindingConfiguration
   }
 }
