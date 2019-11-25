@@ -4,9 +4,8 @@ import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 
 class Configuration(realConfig: TypesafeConfig = ConfigFactory.load()) {
 
-  def as[A: ConfigReader](path: String): A = {
-    val reader = implicitly[ConfigReader[A]]
-    reader.read(path, realConfig)
+  def as[A: ConfigReader](path: String)(implicit reader: ConfigReader[A]): A = {
+    reader.read(realConfig, path)
   }
 
   def asOption[A: ConfigReader](path: String): Option[A] = {

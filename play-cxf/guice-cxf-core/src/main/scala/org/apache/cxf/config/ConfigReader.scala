@@ -10,20 +10,20 @@ import scala.language.higherKinds
 trait ConfigReader[T] { self =>
   private final val DummyPath = "dummy"
 
-  def read(path: String, config: Config): T
+  def read(config: Config, path: String): T
 
   def read(configValue: ConfigValue): T = {
-    read(DummyPath, configValue.atPath(DummyPath))
+    read(configValue.atPath(DummyPath), DummyPath)
   }
 
   def map[B](f: T => B): ConfigReader[B] = new ConfigReader[B] {
-    def read(path: String, config: Config): B = f(self.read(path, config))
+    def read(config: Config, path: String): B = f(self.read(config, path))
   }
 }
 
 object ConfigReader {
   def apply[T](f: Config => String => T): ConfigReader[T] = new ConfigReader[T] {
-    def read(path: String, config: Config): T = f(config)(path)
+    def read(config: Config, path: String): T = f(config)(path)
   }
 
   implicit val stringReader: ConfigReader[String] = ConfigReader(_.getString)
