@@ -4,7 +4,7 @@ def playVersionSuffix: String = {
   versions.take(2).mkString
 }
 
-val CxfVersion = "3.3.3"
+val CxfVersion = "3.4.0"
 val PlayVersion = play.core.PlayVersion.current
 
 enablePlugins(JacocoPlugin)
@@ -19,10 +19,10 @@ def module(id: String, base: java.io.File): Project = {
 
       organization := "eu.sipria.play",
 
-      version := "1.7.0-RC2",
+      version := "1.7.0-RC3",
 
-      scalaVersion := "2.12.10",
-      crossScalaVersions := Seq("2.11.12", "2.12.10", "2.13.1"),
+      scalaVersion := "2.12.12",
+      crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.3"),
 
       scalacOptions ++= Seq(
         "-deprecation"
@@ -40,12 +40,12 @@ def module(id: String, base: java.io.File): Project = {
 val guiceCore = module("guice-cxf-core", file("guice-cxf-core"))
   .settings(
     libraryDependencies ++= Seq(
-      "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.2",
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.2.0",
 
       "org.apache.cxf" % "cxf-core"               % CxfVersion,
       "org.apache.cxf" % "cxf-rt-frontend-jaxws"  % CxfVersion  % Provided,
 
-      "com.google.inject" % "guice"               % "4.2.2",
+      "com.google.inject" % "guice"               % "4.2.3",
 
       "com.typesafe.play" %% "play"               % PlayVersion % Optional,
     )
@@ -80,7 +80,7 @@ val guicePlayEndpoint = module("guice-cxf-endpoint-play", file("guice-cxf-endpoi
 
       "org.apache.cxf" % "cxf-rt-transports-http"   % CxfVersion  % Test,
 
-      "org.scalatest"           %% "scalatest"          % "3.0.8" % Test,
+      "org.scalatest"           %% "scalatest"          % "3.0.9" % Test,
       "org.scalatestplus.play"  %% "scalatestplus-play" % "4.0.3" % Test
     ),
 
