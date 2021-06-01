@@ -17,10 +17,10 @@ def module(id: String, base: java.io.File): Project = {
 
       organization := "eu.sipria.play",
 
-      version := "1.7.0",
+      version := "1.8.0-SNAPSHOT",
 
-      scalaVersion := "2.12.12",
-      crossScalaVersions := Seq("2.11.12", "2.12.14", "2.13.6"),
+      scalaVersion := "2.13.6",
+      crossScalaVersions := Seq("2.12.14", "2.13.6"),
 
       scalacOptions ++= Seq(
         "-deprecation"
@@ -66,20 +66,21 @@ val guicePlayEndpoint = module("guice-cxf-endpoint-play", file("guice-cxf-endpoi
   .settings(
 
     libraryDependencies ++= Seq(
-      "com.typesafe.play" %% "play"                 % PlayVersion % Provided,
-      "com.typesafe.play" %% "play-guice"           % PlayVersion % Provided,
-      "com.typesafe.play" %% "play-logback"         % PlayVersion % Test,
+      "com.typesafe.play" %% "play"                     % PlayVersion % Provided,
+      "com.typesafe.play" %% "play-guice"               % PlayVersion % Provided,
+      "com.typesafe.play" %% "play-logback"             % PlayVersion % Test,
 
-      "org.apache.cxf" % "cxf-core"                 % CxfVersion,
-      "org.apache.cxf" % "cxf-rt-frontend-jaxws"    % CxfVersion  % Provided,
+      "org.apache.cxf" % "cxf-core"                     % CxfVersion,
+      "org.apache.cxf" % "cxf-rt-frontend-jaxws"        % CxfVersion  % Provided,
 
-      "com.typesafe.play" %% "play"                 % PlayVersion % Test,
-      "com.typesafe.play" %% "play-guice"           % PlayVersion % Test,
+      "com.typesafe.play" %% "play"                     % PlayVersion % Test,
+      "com.typesafe.play" %% "play-guice"               % PlayVersion % Test,
+      "com.typesafe.play" %% "play-akka-http-server"    % PlayVersion % Test,
 
-      "org.apache.cxf" % "cxf-rt-transports-http"   % CxfVersion  % Test,
+      "org.apache.cxf" % "cxf-rt-transports-http"       % CxfVersion  % Test,
 
-      "org.scalatest"           %% "scalatest"          % "3.0.9" % Test,
-      "org.scalatestplus.play"  %% "scalatestplus-play" % "4.0.3" % Test
+      "org.scalatest"           %% "scalatest"          % "3.1.4" % Test,
+      "org.scalatestplus.play"  %% "scalatestplus-play" % "5.1.0" % Test
     ),
 
     libraryDependencies ++= {

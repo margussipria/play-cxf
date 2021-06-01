@@ -13,7 +13,7 @@ import org.apache.cxf.transport.play.EndpointModule
 import org.apache.date_and_time_soap_http.{AskTimeRequest, DateAndTime}
 import org.scalactic.StringNormalizations.lowerCased
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{freespec, matchers}
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModuleConversions}
 import play.api.test.{Helpers, TestServer, WsTestClient}
 import play.api.{Application, Configuration, Environment}
@@ -22,7 +22,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.{implicitConversions, postfixOps}
 
-class ServiceSpec extends FreeSpec with GuiceableModuleConversions with Matchers with ScalaFutures {
+class ServiceSpec extends freespec.AnyFreeSpec with GuiceableModuleConversions with matchers.should.Matchers with ScalaFutures {
 
   type Builder = GuiceApplicationBuilder
 
