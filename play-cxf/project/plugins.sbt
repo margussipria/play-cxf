@@ -1,7 +1,7 @@
 // Comment to get more information during initialization
 logLevel := Level.Warn
 
-// The Typesafe repository 
+// The Typesafe repository
 resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
   Resolver.typesafeRepo("releases")
@@ -12,7 +12,7 @@ def propOr(name: String, value: String): String = {
 }
 
 // Use the Play sbt plugin for Play projects
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % propOr("play.version", "2.7.5"))
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % propOr("play.version", "2.7.9"))
 
 addSbtPlugin("io.paymenthighway.sbt" % "sbt-cxf" % "1.7")
 

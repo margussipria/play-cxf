@@ -4,12 +4,10 @@ def playVersionSuffix: String = {
   versions.take(2).mkString
 }
 
-val CxfVersion = "3.4.0"
+val CxfVersion = "3.4.3"
 val PlayVersion = play.core.PlayVersion.current
 
 enablePlugins(JacocoPlugin)
-
-version in CXF := CxfVersion
 
 def module(id: String, base: java.io.File): Project = {
   Project(id, base)
@@ -22,25 +20,25 @@ def module(id: String, base: java.io.File): Project = {
       version := "1.7.0-RC3",
 
       scalaVersion := "2.12.12",
-      crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.3"),
+      crossScalaVersions := Seq("2.11.12", "2.12.14", "2.13.6"),
 
       scalacOptions ++= Seq(
         "-deprecation"
       ),
 
-      testOptions in Test ++= Seq(
+      Test / testOptions ++= Seq(
         Tests.Argument("-oDF"),
-        Tests.Argument(TestFrameworks.ScalaTest, "-u", "%s" format ((target in Test).value / "test-reports"))
+        Tests.Argument(TestFrameworks.ScalaTest, "-u", "%s" format ((Test / target).value / "test-reports"))
       ),
 
-      fork in Test := true
+      Test / fork := true
     )
 }
 
 val guiceCore = module("guice-cxf-core", file("guice-cxf-core"))
   .settings(
     libraryDependencies ++= Seq(
-      "org.scala-lang.modules" %% "scala-collection-compat" % "2.2.0",
+      "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4",
 
       "org.apache.cxf" % "cxf-core"               % CxfVersion,
       "org.apache.cxf" % "cxf-rt-frontend-jaxws"  % CxfVersion  % Provided,
@@ -57,7 +55,7 @@ val guiceClient = module("guice-cxf-client", file("guice-cxf-client"))
       "org.apache.cxf" % "cxf-rt-transports-http" % CxfVersion  % Provided,
       "org.apache.cxf" % "cxf-rt-frontend-jaxws"  % CxfVersion  % Provided,
 
-      "com.typesafe" % "config"                   % "1.4.0"
+      "com.typesafe" % "config"                   % "1.4.1"
     )
   )
   .dependsOn(guiceCore)
@@ -104,7 +102,7 @@ val guicePlayEndpoint = module("guice-cxf-endpoint-play", file("guice-cxf-endpoi
     ),
 
     Test / cxfWSDLs := Seq(
-      Wsdl("DateAndTime", (resourceDirectory in Test).value / "wsdl/DateAndTime.wsdl", Seq(
+      Wsdl("DateAndTime", (Test / resourceDirectory).value / "wsdl/DateAndTime.wsdl", Seq(
         "-wsdlLocation", "classpath:wsdl/DateAndTime.wsdl"
       ))
     )
