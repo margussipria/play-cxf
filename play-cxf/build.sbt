@@ -17,7 +17,7 @@ def module(id: String, base: java.io.File): Project = {
 
       organization := "eu.sipria.play",
 
-      version := "1.7.0-RC3",
+      version := "1.7.0",
 
       scalaVersion := "2.12.12",
       crossScalaVersions := Seq("2.11.12", "2.12.14", "2.13.6"),
