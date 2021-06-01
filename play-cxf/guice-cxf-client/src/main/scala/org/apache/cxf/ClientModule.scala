@@ -24,7 +24,7 @@ abstract class ClientModule(eagerly: Boolean = true) extends CoreModule(eagerly)
 
   protected def bindClient[T : ClassTag](
     key: String,
-    @deprecatedName(Symbol("wrappers")) hooks: Seq[Class[_ <: ClientSetupHooks]] = Seq.empty
+    hooks: Seq[Class[_ <: ClientSetupHooks]] = Seq.empty
   ): Unit = {
     bindHTTPTransport()
 
@@ -52,7 +52,7 @@ object ClientModule {
 
   class ClientProvider[T : ClassTag](
     key: String,
-    @deprecatedName(Symbol("wrappers")) hooks: Seq[Class[_ <: ClientSetupHooks]] = Seq.empty
+    hooks: Seq[Class[_ <: ClientSetupHooks]] = Seq.empty
   ) extends javax.inject.Provider[T] {
     @Inject var bus: Bus = _
     @Inject var injector: com.google.inject.Injector = _

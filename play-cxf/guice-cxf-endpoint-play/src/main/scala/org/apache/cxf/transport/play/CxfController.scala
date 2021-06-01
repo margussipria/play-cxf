@@ -23,9 +23,6 @@ class CxfController @Inject() (
 
   val maxRequestSize: Int = 1024 * 1024
 
-  @deprecated("Select handleStrict, handleStreamed or handleChunked methods", "1.7.0")
-  def handle(path: String = ""): Action[RawBuffer] = handleRequest(path)(toChunkedResult)
-
   /**
    * Handler with a strict entity response.
    *
@@ -85,7 +82,7 @@ class CxfController @Inject() (
   }
 
   protected def toStreamedResult(responseCode: Int, source: Source[ByteString, _], contentType: String): Future[Result] = {
-    Future.successful {
+    Future {
       Status(responseCode).sendEntity(
         HttpEntity.Streamed(source, None, Some(contentType))
       )
@@ -93,7 +90,7 @@ class CxfController @Inject() (
   }
 
   protected def toChunkedResult(responseCode: Int, source: Source[ByteString, _], contentType: String): Future[Result] = {
-    Future.successful {
+    Future {
       Status(responseCode).chunked(source).as(contentType)
     }
   }
