@@ -19,7 +19,7 @@ class IntegrationSpec extends PlaySpec with GuiceOneServerPerTest with ScalaFutu
     "send 404 on a bad request" in {
       implicit val wsClient: WSClient = app.injector.instanceOf(classOf[WSClient])
 
-      val futureResult = wsUrl("/testing").get
+      val futureResult = wsUrl("/testing").get()
       val result = futureResult.futureValue
 
       result.status must be (NOT_FOUND)
@@ -28,7 +28,7 @@ class IntegrationSpec extends PlaySpec with GuiceOneServerPerTest with ScalaFutu
     "work from within a browser" in {
       implicit val wsClient: WSClient = app.injector.instanceOf(classOf[WSClient])
 
-      val futureResult = wsUrl("/").get
+      val futureResult = wsUrl("/").get()
       val response = futureResult.futureValue
 
       response.status must be (OK)

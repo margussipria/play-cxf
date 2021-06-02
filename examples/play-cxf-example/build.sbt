@@ -4,9 +4,9 @@ name := "play-cxf-example"
 
 version := "1.0-SNAPSHOT"
 
-scalaVersion := "2.13.1"
+scalaVersion := "2.13.6"
 
-val CxfVersion = "3.3.3"
+val CxfVersion = "3.4.3"
 
 resolvers ++= Seq(
   Resolver.sonatypeRepo("snapshots")
@@ -21,13 +21,14 @@ libraryDependencies ++= Seq(
   "org.apache.cxf" % "cxf-rt-frontend-jaxws"    % CxfVersion,
   "org.apache.cxf" % "cxf-rt-transports-http"   % CxfVersion,
 
-  "eu.sipria.play" %% "play-guice-cxf_play27" % "1.7.0-SNAPSHOT" changing(),
+  "eu.sipria.play" %% "play-guice-cxf_play28" % "1.8.0-RC1" /* changing() */,
 
-  "org.scalatest"           %% "scalatest"          % "3.0.8" % Test,
-  "org.scalatestplus.play"  %% "scalatestplus-play" % "4.0.3" % Test
+  "org.scalatest"           %% "scalatest"          % "3.1.4"   % Test,
+  "org.scalatestplus"       %% "junit-4-13"         % "3.1.4.0" % Test,
+  "org.scalatestplus.play"  %% "scalatestplus-play" % "5.1.0"   % Test
 )
 
-version in CXF := CxfVersion
+CXF / version := CxfVersion
 
 cxfDefaultArgs := Seq(
   "-p", "services"
